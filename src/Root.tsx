@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import { SITE_NAME, SITE_TAGLINE } from './config/site'
 import { routeOf, type Route } from './state/route'
@@ -39,8 +40,13 @@ export default function Root() {
     document.title = TITLE[route]
   }, [route])
 
-  if (route === 'home') return <Landing />
-  if (route === 'demo') return <Demo />
-  if (route === 'intro') return <Intro />
-  return <App />
+  return (
+    <>
+      {route === 'home' && <Landing />}
+      {route === 'demo' && <Demo />}
+      {route === 'intro' && <Intro />}
+      {route === 'system' && <App />}
+      <Analytics />
+    </>
+  )
 }
