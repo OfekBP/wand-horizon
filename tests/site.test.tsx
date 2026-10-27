@@ -2,7 +2,7 @@ import { act, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import Root from '../src/Root'
 import { GITHUB_REPO_URL } from '../src/config/site'
-import { routeOf } from '../src/state/route'
+import { routeOf } from '../src/state/router'
 
 /** Lazy routes load their chunk on first use; allow for that. */
 const SLOW = { timeout: 10_000 }

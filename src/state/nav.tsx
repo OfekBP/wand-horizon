@@ -1,16 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { NavContext, SCREENS, type GoOptions, type Place, type Screen, type Toast } from './navContext'
-
-function parse(hash: string): Place {
-  const [, s, id] = hash.split('/')
-  return { screen: (SCREENS as string[]).includes(s) ? (s as Screen) : 'overview', id: id ? decodeURIComponent(id) : null }
-}
-
-const hashFor = (p: Place) => `#/${p.screen}${p.id ? `/${encodeURIComponent(p.id)}` : ''}`
+import { NavContext, type GoOptions, type Place, type Screen, type Toast } from './navContext'
+import { parseSystemHash, systemHashFor } from './router'
 
 /** Navigation lives in the URL hash so refresh and links work, without a router dependency. */
 export function NavProvider({ children }: { children: ReactNode }) {
-  const [loc, setLoc] = useState<Place>(() => parse(window.location.hash))
+  const [loc, setLoc] = useState<Place>(() => parseSystemHash(window.location.hash))
   const [backTo, setBackTo] = useState<Place | null>(null)
   const [toast, setToast] = useState<Toast | null>(null)
   const timer = useRef<number | undefined>(undefined)
@@ -20,13 +14,13 @@ export function NavProvider({ children }: { children: ReactNode }) {
   }, [loc])
 
   useEffect(() => {
-    const onHash = () => setLoc(parse(window.location.hash))
+    const onHash = () => setLoc(parseSystemHash(window.location.hash))
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
   const navigate = useCallback((place: Place) => {
-    const next = hashFor(place)
+    const next = systemHashFor(place)
     if (window.location.hash === next) setLoc(place)
     else window.location.hash = next
   }, [])

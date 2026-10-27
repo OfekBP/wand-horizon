@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { SITE_NAME, SITE_TAGLINE } from './config/site'
-import { routeOf, type Route } from './state/route'
+import { isEmbed, routeOf, type Route } from './state/router'
 import { Landing } from './ui/landing/Landing'
 
 // The landing page ships on its own. The System, the demo player and the brand film load when their route is opened,
@@ -18,7 +18,7 @@ function Loading() {
 }
 
 /** The demo player embeds the System with ?embed=1: the app only, with the site-level links hidden. */
-const EMBED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('embed')
+const EMBED = isEmbed()
 
 const TITLE: Record<Route, string> = {
   home: `${SITE_NAME}: ${SITE_TAGLINE}`,

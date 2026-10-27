@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
-import { INTRO_HASH, SYSTEM_HASH } from '../../state/route'
+import { GITHUB_REPO_URL } from '../../config/site'
+import { INTRO_HASH, SYSTEM_HASH } from '../../state/router'
+import { SiteFooter, SiteHeader } from '../site/SiteChrome'
 import '../landing/landing.css'
 import './demo.css'
 import { createMusic, type Music } from './music'
 import { SCENES, SCENE_STARTS, TOTAL_SECONDS, type Caption, type CardText, type Ctx } from './script'
 
-const LOGO = '/wand-horizon-logo.png'
 const FRAME_W = 1440
 const FRAME_H = 810
 
@@ -203,23 +203,13 @@ export function Demo() {
 
   return (
     <div className="landing demo">
-      <header className="lnav">
-        <div className="lnav__inner">
-          <a className="lnav__brand" href="#/" aria-label={`${SITE_NAME} home`}>
-            <img src={LOGO} alt={SITE_NAME} width="865" height="314" />
-          </a>
-          <nav className="lnav__links" aria-label="Site">
-            <a href="#/">Introduction</a>
-            <a href={INTRO_HASH}>Brand film</a>
-            <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
-              GitHub
-            </a>
-          </nav>
-          <a className="lbtn lbtn--primary lbtn--sm" href={SYSTEM_HASH}>
-            Explore the System
-          </a>
-        </div>
-      </header>
+      <SiteHeader label="Site">
+        <a href="#/">Introduction</a>
+        <a href={INTRO_HASH}>Brand film</a>
+        <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
+          GitHub
+        </a>
+      </SiteHeader>
 
       <main className="wrap demo__main">
         <p className="eyebrow">Product demo</p>
@@ -358,16 +348,7 @@ export function Demo() {
         </p>
       </main>
 
-      <footer className="lfoot">
-        <div className="wrap lfoot__inner">
-          <img src={LOGO} alt={SITE_NAME} width="865" height="314" />
-          <p>A browser prototype on synthetic data. Not production-grade security.</p>
-          <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
-            GitHub
-          </a>
-        </div>
-        <p className="lfoot__credit">{SITE_CREDIT}</p>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

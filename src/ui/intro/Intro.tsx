@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SITE_CREDIT, SITE_NAME } from '../../config/site'
-import { DEMO_HASH, HOME_HASH, SYSTEM_HASH } from '../../state/route'
+import { DEMO_HASH, HOME_HASH, SYSTEM_HASH } from '../../state/router'
 import { DURATION, buildFilm, cue, drawFrame, makeSprites, smooth, type Sprites } from './film'
 import { createScore, type Score } from './score'
 import './intro.css'
