@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
-import { DEMO_HASH, SYSTEM_HASH } from '../../state/route'
+import { DEMO_HASH, INTRO_HASH, SYSTEM_HASH } from '../../state/route'
 import './landing.css'
 
 const LOGO = '/wand-horizon-logo.png'
@@ -153,6 +153,7 @@ export function Landing() {
             <button onClick={() => scrollToId('approach')}>Approach</button>
             <button onClick={() => scrollToId('honesty')}>About the data</button>
             <a href={DEMO_HASH}>Demo</a>
+            <a href={INTRO_HASH}>Brand film</a>
           </nav>
           <a className="lbtn lbtn--primary lbtn--sm" href={SYSTEM_HASH}>
             Explore the System
@@ -304,6 +305,7 @@ export function Landing() {
         <div className="wrap lfoot__inner">
           <img src={LOGO} alt={SITE_NAME} width="865" height="314" />
           <p>A browser prototype on synthetic data. Not production-grade security.</p>
+          <a href={INTRO_HASH}>Brand film</a>
           <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
             GitHub
           </a>

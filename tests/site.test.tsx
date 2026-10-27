@@ -15,6 +15,7 @@ describe('site routes', () => {
   it('maps hashes to the landing page or the System', () => {
     for (const h of ['', '#', '#/', '#/home']) expect(routeOf(h)).toBe('home')
     expect(routeOf('#/demo')).toBe('demo')
+    expect(routeOf('#/intro')).toBe('intro')
     for (const h of ['#/system', '#/overview', '#/queue/op-a1', '#/workforce/registry', '#/governance/op-d1']) expect(routeOf(h)).toBe('system')
   })
 
@@ -41,6 +42,15 @@ describe('site routes', () => {
     expect(screen.getByRole('button', { name: 'Play the demo' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Reconstruct an incident/ }).length).toBeGreaterThan(0)
     expect(screen.getByText(/not a rendered video file/)).toBeInTheDocument()
+  })
+
+  it('opens the brand film with its title, controls and links on, ready to replay', () => {
+    window.location.hash = '#/intro'
+    render(<Root />)
+    expect(screen.getByRole('heading', { level: 1, name: /Command the intelligence workforce/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Turn sound on' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Replay' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Watch the product demo/ })).toHaveAttribute('href', '#/demo')
   })
 
   it('loads the System directly from its URL and links back to the introduction', async () => {

@@ -3,6 +3,7 @@ import App from './App'
 import { SITE_NAME, SITE_TAGLINE } from './config/site'
 import { routeOf, type Route } from './state/route'
 import { Demo } from './ui/demo/Demo'
+import { Intro } from './ui/intro/Intro'
 import { Landing } from './ui/landing/Landing'
 
 /** The demo player embeds the System with ?embed=1: the app only, with the site-level links hidden. */
@@ -11,6 +12,7 @@ const EMBED = typeof window !== 'undefined' && new URLSearchParams(window.locati
 const TITLE: Record<Route, string> = {
   home: `${SITE_NAME}: ${SITE_TAGLINE}`,
   demo: `Demo · ${SITE_NAME}`,
+  intro: `${SITE_NAME}: Command the intelligence workforce.`,
   system: `System · ${SITE_NAME}`,
 }
 
@@ -39,5 +41,6 @@ export default function Root() {
 
   if (route === 'home') return <Landing />
   if (route === 'demo') return <Demo />
+  if (route === 'intro') return <Intro />
   return <App />
 }

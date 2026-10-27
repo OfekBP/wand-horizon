@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
-import { SYSTEM_HASH } from '../../state/route'
+import { INTRO_HASH, SYSTEM_HASH } from '../../state/route'
 import '../landing/landing.css'
 import './demo.css'
 import { createMusic, type Music } from './music'
@@ -199,6 +199,7 @@ export function Demo() {
           </a>
           <nav className="lnav__links" aria-label="Site">
             <a href="#/">Introduction</a>
+            <a href={INTRO_HASH}>Brand film</a>
             <a href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
               GitHub
             </a>
