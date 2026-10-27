@@ -4,6 +4,9 @@ import Root from '../src/Root'
 import { GITHUB_REPO_URL } from '../src/config/site'
 import { routeOf } from '../src/state/route'
 
+/** Lazy routes load their chunk on first use; allow for that. */
+const SLOW = { timeout: 10_000 }
+
 async function goTo(hash: string) {
   await act(async () => {
     window.location.hash = hash
@@ -34,20 +37,20 @@ describe('site routes', () => {
     for (const link of screen.getAllByRole('link', { name: /Watch the demo/ })) expect(link).toHaveAttribute('href', '#/demo')
   })
 
-  it('opens the demo player from its URL with its chapters, ready to play', () => {
+  it('opens the demo player from its URL with its chapters, ready to play', async () => {
     window.location.hash = '#/demo'
     render(<Root />)
     expect(routeOf(window.location.hash)).toBe('demo')
-    expect(screen.getByRole('heading', { level: 1, name: /Wand Horizon in about/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /Wand Horizon in about/ }, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Play the demo' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Reconstruct an incident/ }).length).toBeGreaterThan(0)
     expect(screen.getByText(/not a rendered video file/)).toBeInTheDocument()
   })
 
-  it('opens the brand film with its title, controls and links on, ready to replay', () => {
+  it('opens the brand film with its title, controls and links on, ready to replay', async () => {
     window.location.hash = '#/intro'
     render(<Root />)
-    expect(screen.getByRole('heading', { level: 1, name: /Command the intelligence workforce/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1, name: /Command the intelligence workforce/ }, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Turn sound on' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Replay' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Watch the product demo/ })).toHaveAttribute('href', '#/demo')
@@ -56,17 +59,17 @@ describe('site routes', () => {
   it('loads the System directly from its URL and links back to the introduction', async () => {
     window.location.hash = '#/queue'
     render(<Root />)
-    expect(await screen.findByRole('navigation', { name: 'Primary' })).toBeInTheDocument()
+    expect(await screen.findByRole('navigation', { name: 'Primary' }, SLOW)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Introduction' })).toHaveAttribute('href', '#/')
   })
 
   it('switches between the landing page and the System when the hash changes', async () => {
     render(<Root />)
     await goTo('#/system')
-    expect(await screen.findByRole('navigation', { name: 'Primary' })).toBeInTheDocument()
+    expect(await screen.findByRole('navigation', { name: 'Primary' }, SLOW)).toBeInTheDocument()
     expect(document.title).toMatch(/System/)
     await goTo('#/')
-    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 1 }, SLOW)).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: 'Primary' })).not.toBeInTheDocument()
   })
 })
