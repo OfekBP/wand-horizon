@@ -180,6 +180,9 @@ export function Landing() {
                 <a className="lbtn lbtn--ghost" href={DEMO_HASH}>
                   Watch the demo
                 </a>
+                <a className="lbtn lbtn--ghost" href={INTRO_HASH}>
+                  Watch the brand film
+                </a>
                 <RepoLink className="lbtn lbtn--ghost" />
               </div>
               <p className="hero__note">The System runs in your browser on synthetic data: 50 people and 500 AI workers. No backend, no real models.</p>
@@ -294,6 +297,9 @@ export function Landing() {
                 <RepoLink className="lbtn lbtn--ghost" />
                 <a className="lbtn lbtn--ghost" href={DEMO_HASH}>
                   Watch the demo
+                </a>
+                <a className="lbtn lbtn--ghost" href={INTRO_HASH}>
+                  Watch the brand film
                 </a>
               </div>
             </Reveal>
