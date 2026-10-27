@@ -2,14 +2,6 @@ import { usd } from '../domain/format'
 
 export const money = usd
 
-export function moneyCompact(n: number): string {
-  const abs = Math.abs(n)
-  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`
-  if (abs >= 10_000) return `$${Math.round(n / 1_000)}K`
-  if (abs >= 1_000) return `$${(n / 1_000).toFixed(1)}K`
-  return `$${Math.round(n)}`
-}
-
 export const pct = (x: number, digits = 0) => `${(x * 100).toFixed(digits)}%`
 
 const dtf = new Intl.DateTimeFormat('en-US', {

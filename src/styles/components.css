@@ -62,13 +62,6 @@
   padding: 0 var(--s-3);
   font-size: var(--t-xs);
 }
-.btn--icon {
-  padding: 0;
-  width: 36px;
-}
-.btn--icon.btn--sm {
-  width: 32px;
-}
 
 /* text-style action used inside rows and sentences */
 .link {
@@ -364,11 +357,6 @@
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 @keyframes slide { from { transform: translateX(28px); opacity: 0; } }
-
-/* ---------- key/value list ---------- */
-.kv { display: grid; grid-template-columns: 132px 1fr; gap: 8px var(--s-4); font-size: var(--t-sm); margin: 0; }
-.kv dt { color: var(--ink-3); }
-.kv dd { margin: 0; }
 
 /* ---------- toast ---------- */
 .toast {

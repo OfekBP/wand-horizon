@@ -74,13 +74,7 @@
 .mini__track { height: 7px; border-radius: 2px; background: transparent; }
 .mini__bar { display: block; height: 100%; border-radius: 2px; min-width: 2px; }
 .mini__bar--verified { background: var(--value-verified); }
-.mini__bar--estimated {
-  background: repeating-linear-gradient(135deg, var(--value-estimated-fg) 0 2px, var(--value-estimated-bg) 2px 4px);
-  outline: 1px solid var(--value-estimated-fg);
-  outline-offset: -1px;
-}
 .mini__val { font-variant-numeric: tabular-nums; }
-.mini__val--muted { color: var(--ink-3); }
 
 
 .defs { padding: 0 var(--s-5) var(--s-5); display: grid; gap: var(--s-4); font-size: var(--t-sm); color: var(--ink-2); }
@@ -113,7 +107,6 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 
 
 
-.card__foot--stack { flex-direction: column; align-items: flex-start; }
 
 
 @media (max-width: 760px) {

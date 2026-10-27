@@ -1,6 +1,6 @@
 import { appendEvent } from './audit'
 import { authorize } from './authorize'
-import type { Actor, AppState, Operation, PermissionAction } from './types'
+import type { AppState, Operation, PermissionAction } from './types'
 
 /** Scopes the prototype knows about. Matching is exact-string; there are no wildcards. */
 export const SCOPES: Record<string, string> = {
@@ -217,6 +217,3 @@ function currentScope(state: AppState, workerId: string, scope: string) {
   return authorize(state.events, { workerId, requiredScope: scope, amount: 0 }, state.nextSeq - 1).scopeState
 }
 
-export function withActor(state: AppState, actor: Actor): AppState {
-  return { ...state, actingAs: actor }
-}

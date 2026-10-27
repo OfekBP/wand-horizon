@@ -129,8 +129,3 @@ export function boundsOf(layout: MapLayout, ids: string[], pad = 24): Rect | nul
   const maxY = Math.max(...pts.map((p) => p.y + p.r))
   return { x: minX - pad, y: minY - pad, w: maxX - minX + 2 * pad, h: maxY - minY + 2 * pad }
 }
-
-/** Where a node or a hub sits. */
-export function pointOf(layout: MapLayout, id: string): { x: number; y: number } | undefined {
-  return layout.nodes.get(id) ?? layout.hubs.get(id)
-}

@@ -39,7 +39,7 @@ Wand Horizon is a working prototype that answers both. It is a website you open 
 7. **A "reducer"** is a pure function `(oldState, action) → newState`. It is the only place our data is allowed to change. `applyAction` in `src/domain/reducer.ts` is ours.
 8. **An "event log"** is a list where you only ever add new entries, never edit or delete old ones, like a bank statement. Our audit trail is one.
 9. **A "hash URL"** is the part after `#` (e.g. `…/#/governance/op-d1`). Changing it does not reload the page, so the app can read it and show the right screen. That makes links and refresh work without a server.
-10. **A "test"** is a small program that checks our code does what we claim. We have 130, and they run automatically on GitHub.
+10. **A "test"** is a small program that checks our code does what we claim. We have 147, and they run automatically on GitHub.
 
 ---
 
@@ -127,6 +127,7 @@ src/
     audit.ts             builds events (appendEvent) and words them for humans
     selectors.ts         read-only questions: metrics, queues, cases, then-vs-now
     findings.ts          the ranked list of problems, cause chains, deadlines
+    roi.ts               return on cost: verified value over modeled cost, colours, roll-ups
     orgLayout.ts         computes where every dot goes on the map
     format.ts            money and date formatting
   data/
@@ -140,7 +141,7 @@ src/
   ui/
     terms.ts             the labels the demo and tests rely on
     shell/               left rail + top bar around every System screen
-    primitives/          small building blocks: Button, Badge, Card, Table, Overlay, Logo, Icon
+    primitives/          small building blocks: Button, Badge, RoiBadge, Card, Table, Overlay, Logo, Icon
     audit/               the event timeline used on case pages
     screens/
       Overview/          "Start here": the three questions
@@ -150,7 +151,7 @@ src/
     landing/ site/       the public landing page and its shared header/footer
     demo/                the product demo player (script.ts is the storyboard)
     intro/               the 22-second brand film (film.ts drawing, score.ts sound)
-tests/                   130 automated tests in 12 files
+tests/                   147 automated tests in 14 files
 docs/                    architecture, Q&A, this guide, the email
 .github/workflows/ci.yml runs checks on every push
 ```
@@ -270,8 +271,8 @@ Ranking: severity first, then kind, then how many workers it touches. Each findi
 
 ## 12. Tests, build, deploy
 
-- `npm run dev` runs it locally; `npm test` runs 130 tests; `npm run build` makes the static files; `npx oxlint` checks style.
-- Tests cover: the authorization rules and history (`domain.test.ts`), the data (`generate.test.ts`), findings (`findings.test.ts`), the map layout (`orgLayout.test.ts`), case and governance maths (`cases.test.ts`), contrast (`contrast.test.ts`), the UI flows (`flows`, `map`, `replay`), routes (`site`, `router`), and the demo script (`demo-integrity`).
+- `npm run dev` runs it locally; `npm test` runs 147 tests; `npm run build` makes the static files; `npx oxlint` checks style.
+- Tests cover: return on cost (`roi.test.ts`, `roi-ui.test.tsx`), the authorization rules and history (`domain.test.ts`), the data (`generate.test.ts`), findings (`findings.test.ts`), the map layout (`orgLayout.test.ts`), case and governance maths (`cases.test.ts`), contrast (`contrast.test.ts`), the UI flows (`flows`, `map`, `replay`), routes (`site`, `router`), and the demo script (`demo-integrity`).
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs typecheck, lint, tests and build on every push.
 - **Deploy:** the built static files are hosted on Vercel at `wand-horizon.vercel.app`. There is no server code.
 

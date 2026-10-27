@@ -13,6 +13,7 @@ src/
     reducer.ts     applyAction(): the single pure state-transition function
     selectors.ts   metrics, queues, case rows, authority at risk, then-vs-now, scenario progress
     findings.ts    the ranked findings, their cause chains and reach (derived, never stored)
+    roi.ts         return on cost: verified value over modeled cost, thresholds, roll-ups (derived, never stored)
     orgLayout.ts   deterministic organization layout for the map (pods, regions, reporting lines)
   data/      seeded PRNG and fixtures; history is produced by replaying actions through the real reducer
   state/     store.tsx (state + act()), appContext.ts, nav.tsx + navContext.ts (System navigation), router.ts (the URL grammar)

@@ -2,7 +2,7 @@
 
 How to use this: read a section, close it, and answer each question out loud in your own words. Every answer says **what to say**, **where it is in the code** (so you can show it), and **what not to claim**. The honest answer is always the strong one: the project is deliberately a browser simulation, and everything below is true of the code as submitted.
 
-Numbers to know cold: **50 people, 500 AI workers, 8 teams, 9 missions, 7 conflicts, 106 operations, 340 audit events** in the seeded data; **4 System screens**; **130 tests**; **2 runtime dependencies** (React and React DOM).
+Numbers to know cold: **50 people, 500 AI workers, 8 teams, 9 missions, 7 conflicts, 106 operations, 340 audit events** in the seeded data; **4 System screens**; **147 tests**; **2 runtime dependencies** (React and React DOM).
 
 ---
 
@@ -153,7 +153,7 @@ Numbers to know cold: **50 people, 500 AI workers, 8 teams, 9 missions, 7 confli
 ## 7. Quality, testing and honesty
 
 **Q34. How do you know it works?**
-- 130 automated tests: the authorization rules (revoke mid-flight, limit exceeded, ordering by seq, history never rewritten), the fixtures, findings, map layout, the UI flows (reassign, resolve, change permission then run), the replay, routing, contrast ratios, and the demo-integrity test. CI runs typecheck, lint, tests and build on every push. Lint is clean.
+- 147 automated tests: the authorization rules (revoke mid-flight, limit exceeded, ordering by seq, history never rewritten), the fixtures, findings, map layout, the UI flows (reassign, resolve, change permission then run), the replay, routing, contrast ratios, and the demo-integrity test. CI runs typecheck, lint, tests and build on every push. Lint is clean.
 
 **Q35. What would you do differently or next?**
 - Real persistence (an append-only store with a hash chain), real authentication and server-side enforcement, multi-step operations, real activity and cost time series, human-vs-AI conflicts, a separate investigator experience. Also split the largest files and move display text out of the domain layer (planned, not done).
