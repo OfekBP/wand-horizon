@@ -153,7 +153,7 @@ const LEADS: Record<string, { name: string; role: string }> = {
   't-treasury': { name: 'Elena Park', role: 'Head of Treasury' },
   't-payments': { name: 'Priya Raman', role: 'Head of Payments Operations' },
   't-compliance': { name: 'Marcus Hale', role: 'Director, Compliance Investigations' },
-  't-finops': { name: 'Dana Whitfield', role: 'Chief Operating Officer' },
+  't-finops': { name: 'Rotem Alaluf', role: 'Chief Operating Officer' },
 }
 
 const VENDORS = ['Halden Freight Ltd', 'Brightwater Logistics', 'Corvid Packaging', 'Meridian Facilities', 'Alder & Finch LLP', 'Tessel Cloud Services', 'Orchard Print Group', 'Larkspur Utilities']
@@ -230,7 +230,7 @@ export function createInitialState(): AppState {
       if (isLead) leadByTeam.set(spec.id, id)
     }
   }
-  const execId = workers.find((w) => w.name === 'Dana Whitfield')!.id
+  const execId = workers.find((w) => w.name === 'Rotem Alaluf')!.id
   for (const w of workers) {
     if (w.kind !== 'human') continue
     const lead = leadByTeam.get(w.teamId)!
@@ -483,7 +483,7 @@ export function createInitialState(): AppState {
   // R1: authority at risk. The ledger limit was lowered below this in-flight amount after it started,
   // so it would be denied if it ran now. It has not been attempted, so there is no stored decision yet.
   const r1 = aiByName('Ledger-Adjust-002')
-  const dana0 = human('Dana Whitfield')
+  const dana0 = human('Rotem Alaluf')
   startOp(mkOp({
     id: 'op-r1', workerId: r1.id, requiredScope: 'ledger:adjust', amount: 140_000, status: 'in_progress',
     startedAt: iso(NOW - 6 * HOUR), severity: 'high', decisionOwnerId: dana0.id,
@@ -543,7 +543,7 @@ export function createInitialState(): AppState {
   })
 
   /* resolved conflicts */
-  const dana = human('Dana Whitfield')
+  const dana = human('Rotem Alaluf')
   push(NOW - 5 * DAY, { type: 'RESOLVE_CONFLICT', at: iso(NOW - 5 * DAY), actor: dana.name, conflictId: 'c-006', authoritativeWorkerId: conflicts[5].workerAId, note: 'Refund-Issue-004 owns refund actioning; support worker only drafts.' })
   push(NOW - 7 * DAY, { type: 'RESOLVE_CONFLICT', at: iso(NOW - 7 * DAY), actor: dana.name, conflictId: 'c-007', authoritativeWorkerId: conflicts[6].workerBId, note: 'Exception triage takes precedence on failed batches.' })
 
@@ -564,7 +564,7 @@ export function createInitialState(): AppState {
 export function personasFor(state: AppState): Record<SimRole, Actor> {
   const name = (n: string) => state.workers.find((w) => w.name === n)!.name
   return {
-    executive: { name: name('Dana Whitfield'), role: 'executive' },
+    executive: { name: name('Rotem Alaluf'), role: 'executive' },
     manager: { name: name('Priya Raman'), role: 'manager' },
     investigator: { name: name('Marcus Hale'), role: 'investigator' },
   }

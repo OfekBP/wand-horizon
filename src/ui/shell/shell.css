@@ -157,3 +157,4 @@
   .nav__count { position: static; }
   .side__foot .btn span { position: static; width: auto; height: auto; clip: auto; }
 }
+.credit { padding: var(--s-5) var(--s-6); text-align: center; font-size: var(--t-xs); color: var(--ink-3); }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { DEMO_VIDEO_URL, GITHUB_REPO_URL, SITE_NAME } from '../../config/site'
+import { DEMO_VIDEO_URL, GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
 import { SYSTEM_HASH } from '../../state/route'
 import './landing.css'
 
@@ -311,6 +311,7 @@ export function Landing() {
             GitHub
           </a>
         </div>
+        <p className="lfoot__credit">{SITE_CREDIT}</p>
       </footer>
     </div>
   )

@@ -2,7 +2,7 @@ import { useMemo, type ReactNode } from 'react'
 import { findings } from '../../domain/findings'
 import { authorityAtRisk, queueCounts } from '../../domain/selectors'
 import type { SimRole } from '../../domain/types'
-import { DEMO_VIDEO_URL } from '../../config/site'
+import { DEMO_VIDEO_URL, GITHUB_REPO_URL, SITE_CREDIT } from '../../config/site'
 import { HOME_HASH } from '../../state/route'
 import { SCREEN_LABEL, useNav, type Screen } from '../../state/nav'
 import { useApp } from '../../state/store'
@@ -88,7 +88,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
           <span className="topbar__spacer" />
           <a className="topbar__link" href={HOME_HASH}>
-            Introduction
+            <span aria-hidden="true">← </span>Introduction
+          </a>
+          <a className="topbar__link" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
+            GitHub
           </a>
           {DEMO_VIDEO_URL && (
             <a className="topbar__link" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer noopener">
@@ -110,6 +113,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main id="main">{children}</main>
+        <footer className="credit">{SITE_CREDIT}</footer>
       </div>
 
       {toast && (
