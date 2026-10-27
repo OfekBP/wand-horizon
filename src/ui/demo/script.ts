@@ -28,6 +28,8 @@ export interface Ctx {
   find: <T extends HTMLElement>(look: (d: Document) => T | null | undefined, timeoutMs?: number) => Promise<T | null>
   point: (el: HTMLElement | null, fx?: number, fy?: number) => Promise<void>
   click: (el: HTMLElement | null) => Promise<void>
+  /** Types into a field one character at a time, as a person would. */
+  type: (el: HTMLElement | null, text: string) => Promise<void>
   caption: (c: Caption | null) => void
   card: (c: CardText | null) => void
   showCursor: (visible: boolean) => void
@@ -56,7 +58,7 @@ export const SCENES: Scene[] = [
     id: 'problem',
     label: 'The problem',
     summary: 'A company of 50 people and 500 AI workers cannot see itself or prove what its AI was allowed to do.',
-    seconds: 9,
+    seconds: 7,
     async run(c) {
       c.go('#/overview')
       c.showCursor(false)
@@ -65,7 +67,7 @@ export const SCENES: Scene[] = [
         title: '50 people. 500 AI workers.',
         body: 'Who owns what? What is stuck? And when an AI worker acts, who can prove it was allowed to?',
       })
-      await c.wait(4800)
+      await c.wait(3800)
       c.card({
         eyebrow: 'In this demo',
         title: 'See it. Decide. Then prove it.',
@@ -77,7 +79,7 @@ export const SCENES: Scene[] = [
     id: 'overview',
     label: 'Executive overview',
     summary: 'Value, cost and what needs a decision, with verified, estimated and unmeasured value kept apart.',
-    seconds: 14,
+    seconds: 11,
     async run(c) {
       c.card(null)
       c.caption({ step: 'See', title: 'The executive overview', body: 'What is blocked, ranked by severity, beside value that is verified, estimated or unmeasured. Never blended.' })
@@ -96,7 +98,7 @@ export const SCENES: Scene[] = [
     id: 'conflict',
     label: 'A conflict on the map',
     summary: 'The workforce map draws ownership and finds two missions working against each other.',
-    seconds: 15,
+    seconds: 11,
     async run(c) {
       c.go('#/workforce')
       await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
@@ -114,7 +116,7 @@ export const SCENES: Scene[] = [
     id: 'blocked',
     label: 'A blocked decision',
     summary: 'A $2.4M settlement waits on an approver who is out of office; the decision moves to someone available.',
-    seconds: 16,
+    seconds: 13,
     async run(c) {
       // Each chapter can be the first one played, so it opens its own page when it is not already there.
       if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
@@ -131,10 +133,50 @@ export const SCENES: Scene[] = [
     },
   },
   {
+    id: 'cost',
+    label: 'Spend without proof',
+    summary: 'Modeled cost is rising on a mission with no verified value; pausing the workers lowers the run-rate.',
+    seconds: 9,
+    async run(c) {
+      if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
+      await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
+      c.showCursor(true)
+      await c.click(await c.find(finding('Cost without verified value')))
+      c.caption({ step: 'Decide', title: 'Cost is up, with nothing verified', body: 'Modeled run cost rose 74% on 14 workers with no verified value. The previous period is a labeled simulation, not a measurement.' })
+      await c.wait(2400)
+      await c.click(await c.find((d) => byText(d, 'button', /^Pause \d+ workers$/)))
+      c.caption({ step: 'Decide', title: 'Pausing removes the spend, and is on the record', body: 'The run-rate falls, the workers are drawn as paused, and one audit event is written.' })
+      await c.wait(2000)
+    },
+  },
+  {
+    id: 'live',
+    label: 'Authority changes mid-flight',
+    summary: 'A wire is staged, its permission is revoked, and the execution step is prevented, with the decision stored.',
+    seconds: 18,
+    async run(c) {
+      c.go('#/governance/op-c1')
+      await c.find((d) => byText(d, 'button', /^Run execution step$/))
+      c.caption({ step: 'Prove', title: 'A $480,000 wire is staged', body: 'Payments-Disburse-003 is authorized today. Then its permission changes before the step runs.' })
+      c.showCursor(true)
+      await c.wait(1800)
+      await c.click(await c.find((d) => byText(d, 'button', /^Change permissions$/)))
+      const revoke = await c.find((d) => Array.from(d.querySelectorAll<HTMLElement>('label.choice')).find((l) => /Revoke/.test(l.textContent ?? '')))
+      await c.click(revoke)
+      await c.type(await c.find((d) => d.querySelector<HTMLElement>('#perm-reason')), 'Vendor under sanctions review')
+      await c.click(await c.find((d) => byText(d, 'footer button, .overlay button, button', /^Revoke$/)))
+      await c.wait(800)
+      c.caption({ step: 'Prove', title: 'Now the step runs', body: 'Authorization is judged at execution time, not when the work began.' })
+      await c.click(await c.find((d) => byText(d, 'button', /^Run execution step$/)))
+      c.caption({ step: 'Prove', title: 'Execution prevented, and recorded', body: 'The stored decision keeps the permission state it relied on, so it can be reconstructed later.' })
+      await c.wait(2200)
+    },
+  },
+  {
     id: 'replay',
     label: 'Reconstruct an incident',
     summary: 'Scrub a real incident and see what the AI worker was authorized to do then, beside what is permitted today.',
-    seconds: 20,
+    seconds: 14,
     async run(c) {
       c.go('#/governance/op-d1')
       await c.find((d) => d.querySelector<HTMLElement>('.rp'))
@@ -159,7 +201,7 @@ export const SCENES: Scene[] = [
     id: 'outro',
     label: 'Try it yourself',
     summary: 'One workforce. Full accountability.',
-    seconds: 8,
+    seconds: 6,
     async run(c) {
       c.caption(null)
       c.showCursor(false)

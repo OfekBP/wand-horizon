@@ -12,6 +12,7 @@ import { Badge, SeverityBadge, StatusBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
 import { Card } from '../../primitives/Layout'
+import { PermissionDialog } from '../Workforce/PermissionDialog'
 import { PermissionsList } from '../Workforce/PermissionsList'
 import { IncidentReplay } from './IncidentReplay'
 import './governance.css'
@@ -26,6 +27,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
   const { state, index, act } = useApp()
   const { go, notify } = useNav()
   const [error, setError] = useState<string | null>(null)
+  const [editing, setEditing] = useState(false)
 
   const timeline = useMemo(() => operationTimeline(state, op), [state, op])
   const opEvents = useMemo(() => timeline.filter((e) => e.operationId === op.id), [timeline, op.id])
@@ -171,9 +173,12 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
               {live.state.active && live.state.limit !== undefined && op.amount > live.state.limit ? ` · the ${money(op.amount)} amount exceeds it.` : '.'}
             </div>
           </div>
-          <Button variant="primary" onClick={run}>
-            Run execution step
-          </Button>
+          <div className="policy__actions">
+            {worker && <Button onClick={() => setEditing(true)}>Change permissions</Button>}
+            <Button variant="primary" onClick={run}>
+              Run execution step
+            </Button>
+          </div>
         </div>
       )}
       {op.status === 'awaiting_approval' && (
@@ -190,6 +195,8 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
           {error}
         </div>
       )}
+
+      {editing && worker && <PermissionDialog worker={worker} initialScope={op.requiredScope} onClose={() => setEditing(false)} />}
 
       {timeline.length >= 3 && (timeline.some((e) => e.type === 'PermissionChanged') || lastEval) && selected && (
         <IncidentReplay op={op} timeline={timeline} selectedSeq={selected.seq} onPick={setPickedSeq} />

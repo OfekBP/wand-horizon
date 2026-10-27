@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../src/data/generate'
 import { findings, missionMembers, suggestedDelegates } from '../src/domain/findings'
 import { applyAction, type Action } from '../src/domain/reducer'
-import { classifyAiWorkers, overviewMetrics } from '../src/domain/selectors'
+import { blockedOperations, classifyAiWorkers, overviewMetrics } from '../src/domain/selectors'
 import type { AppState } from '../src/domain/types'
 
 const seed = createInitialState()
@@ -53,6 +53,20 @@ describe('seeded findings', () => {
     const c = seed.conflicts.find((x) => x.id === 'c-001')!
     expect(worker('Payments-Disburse-003').missionId).toBe(c.missionAId)
     expect(worker('Liquidity-Forecast-005').missionId).toBe(c.missionBId)
+  })
+})
+
+describe('downstream of a blocked decision (derived)', () => {
+  it('names the mission at risk and counts the other operations waiting on the same person', () => {
+    const f = findings(seed).find((x) => x.id === 'blocked:op-a1')!
+    const op = seed.operations.find((o) => o.id === 'op-a1')!
+    const mission = seed.missions.find((m) => m.id === worker('Settlement-Recon-007').missionId)!
+    expect(f.chain.find((c) => c.label === 'Mission at risk')?.detail).toContain(mission.name)
+    expect(f.reach.missionIds).toEqual([mission.id])
+    const others = blockedOperations(seed).filter((o) => o.id !== op.id && o.decisionOwnerId === op.decisionOwnerId)
+    const also = f.chain.find((c) => c.label === 'Also waiting on them')
+    if (others.length > 0) expect(also?.detail).toContain(`${others.length} other blocked operation`)
+    else expect(also).toBeUndefined()
   })
 })
 

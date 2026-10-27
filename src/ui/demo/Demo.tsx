@@ -144,6 +144,18 @@ export function Demo() {
               setCursor((c) => ({ ...c, clicking: false }))
               await wait(450)
             },
+            type: async (el, text) => {
+              if (!el) return
+              const view = el.ownerDocument.defaultView as (Window & typeof globalThis) | null
+              const proto = el instanceof (view?.HTMLTextAreaElement ?? HTMLTextAreaElement) ? view?.HTMLTextAreaElement.prototype : view?.HTMLInputElement.prototype
+              const setter = proto ? Object.getOwnPropertyDescriptor(proto, 'value')?.set : undefined
+              for (let i = 1; i <= text.length; i++) {
+                setter?.call(el, text.slice(0, i))
+                el.dispatchEvent(new (view?.Event ?? Event)('input', { bubbles: true }))
+                await wait(45)
+              }
+              await wait(500)
+            },
             caption: setCaption,
             card: setCard,
             showCursor: (visible) => setCursor((c) => ({ ...c, visible })),

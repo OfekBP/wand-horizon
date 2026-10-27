@@ -148,3 +148,5 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 
 .row-btn__seq { margin-top: 2px; }
 .card.card--night .row-btn__seq { color: var(--night-ink-2); }
+
+.rows__label { padding: var(--s-3) var(--s-5) var(--s-2); font-size: 11px; font-weight: 560; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-top: 1px solid var(--line); }

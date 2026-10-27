@@ -123,6 +123,20 @@ function blockedDecisionFindings(state: AppState): Finding[] {
       ]
       if (op.dueAt) chain.push({ label: 'Deadline', detail: `Due ${formatUtc(op.dueAt)}, in ${span(state.clock, op.dueAt)}.` })
       chain.push({ label: 'Executing worker', detail: `${worker?.name} has done its part and cannot proceed without the decision.`, ref: { kind: 'worker', id: op.workerId } })
+
+      // Downstream: what else is held by the same person, and which mission the work belongs to. Both are derived.
+      const others = blockedOperations(state).filter((o) => o.id !== op.id && o.decisionOwnerId === owner.id)
+      const mission = state.missions.find((m) => m.id === worker?.missionId)
+      if (mission) {
+        chain.push({ label: 'Mission at risk', detail: `${mission.name}: ${mission.objective}`, ref: { kind: 'mission', id: mission.id } })
+      }
+      if (others.length > 0) {
+        const total = others.reduce((a, o) => a + o.amount, 0)
+        chain.push({
+          label: 'Also waiting on them',
+          detail: `${others.length} other blocked operation${others.length === 1 ? '' : 's'} (${usd(total)}) also wait on ${owner.name}: ${others.slice(0, 3).map((o) => o.title).join('; ')}${others.length > 3 ? '; and more' : ''}.`,
+        })
+      }
       return {
         id: `blocked:${op.id}`,
         kind: 'blocked-decision' as const,
@@ -130,7 +144,7 @@ function blockedDecisionFindings(state: AppState): Finding[] {
         title: `${op.title} is blocked because ${owner.name} is unavailable`,
         consequence: op.consequence ?? `${usd(op.amount)} waits on a decision nobody can currently take.`,
         chain,
-        reach: { ...emptyReach(), workerIds: [op.workerId], humanIds: [owner.id], teamIds: uniq([worker?.teamId ?? '', owner.teamId]), opIds: [op.id] },
+        reach: { ...emptyReach(), workerIds: [op.workerId], humanIds: [owner.id], teamIds: uniq([worker?.teamId ?? '', owner.teamId]), missionIds: mission ? [mission.id] : [], opIds: [op.id] },
       }
     })
 }

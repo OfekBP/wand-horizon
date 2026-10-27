@@ -123,6 +123,30 @@ describe('Flows C and D: permission change mid-flight, then reconstruct', () => 
   })
 })
 
+describe('One-page mid-flight story and the cost row', () => {
+  it('lets the case page change the permission, then run the step, and be prevented', async () => {
+    const user = userEvent.setup()
+    await open('#/governance/op-c1')
+    await user.click(await screen.findByRole('button', { name: 'Change permissions' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Change permissions' })
+    await user.click(within(dialog).getByRole('radio', { name: 'Revoke' }))
+    await user.type(within(dialog).getByLabelText('Reason'), 'Vendor under sanctions review')
+    await user.click(within(dialog).getByRole('button', { name: 'Revoke' }))
+    await user.click(await screen.findByRole('button', { name: 'Run execution step' }))
+    expect(await screen.findByText(/The action did not run\./)).toBeInTheDocument()
+    expect(screen.getByText('Execution prevented')).toBeInTheDocument()
+  })
+
+  it('shows spend without proof on the Overview and opens it on the map', async () => {
+    const user = userEvent.setup()
+    await open('#/overview')
+    const row = await screen.findByRole('button', { name: /Investigate Clear the Q4 claims backlog/ })
+    expect(screen.getByText(/Spend without proof/)).toBeInTheDocument()
+    await user.click(row)
+    expect(await screen.findByRole('complementary', { name: 'Situation' })).toHaveTextContent(/none with verified value/)
+  })
+})
+
 describe('One product, two missions', () => {
   it('Overview shows authority at risk and moves when a permission is revoked mid-flight', async () => {
     const user = userEvent.setup()

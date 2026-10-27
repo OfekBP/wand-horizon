@@ -20,6 +20,7 @@ export function Overview() {
   const risk = useMemo(() => authorityAtRisk(state), [state])
   const scenarios = useMemo(() => scenarioProgress(state), [state])
   const found = useMemo(() => deriveFindings(state), [state])
+  const spend = useMemo(() => found.filter((f) => f.kind === 'cost-without-proof'), [found])
   // Where a problem has a finding, the map is the best place to understand it; otherwise the queue.
   const openIssue = (i: { id: string; kind: string }) => {
     const f = found.find((x) => x.id === `${i.kind === 'blocked' ? 'blocked' : 'conflict'}:${i.id}`)
@@ -121,6 +122,28 @@ export function Overview() {
                 </li>
               ))}
             </ul>
+          )}
+          {spend.length > 0 && (
+            <>
+              <div className="rows__label">Spend without proof (modeled cost, simulated comparison)</div>
+              <ul className="rows">
+                {spend.map((f) => (
+                  <li key={f.id}>
+                    <button className="row-btn" onClick={() => go('workforce', f.id)} aria-label={`Investigate ${f.title}`}>
+                      <SeverityBadge severity={f.severity} />
+                      <span style={{ minWidth: 0 }}>
+                        <div className="row-btn__title">{f.title}</div>
+                        <div className="row-btn__detail">{f.consequence}</div>
+                      </span>
+                      <span className="row-btn__age">
+                        <strong className="num">{f.reach.workerIds.length}</strong>
+                        workers
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
           <div className="card__foot">
             <span>{counts.concerns} performance concerns are also open.</span>

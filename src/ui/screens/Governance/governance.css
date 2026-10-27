@@ -72,3 +72,5 @@
 
 .standing { display: grid; gap: var(--s-2); }
 .standing .chips { margin-top: 0; }
+
+.policy__actions { display: flex; flex: none; flex-wrap: wrap; gap: var(--s-2); }
