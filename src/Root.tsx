@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import App from './App'
 import { SITE_NAME, SITE_TAGLINE } from './config/site'
 import { routeOf } from './state/route'
@@ -25,5 +26,10 @@ export default function Root() {
     document.title = route === 'home' ? `${SITE_NAME}: ${SITE_TAGLINE}` : `System · ${SITE_NAME}`
   }, [route])
 
-  return route === 'home' ? <Landing /> : <App />
+  return (
+    <>
+      {route === 'home' ? <Landing /> : <App />}
+      <Analytics />
+    </>
+  )
 }
