@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { findings as deriveFindings } from '../../../domain/findings'
+import { buildRoi, companyReturn, fmtMultiple, teamReturn } from '../../../domain/roi'
 import { authorityAtRisk, criticalIssues, overviewMetrics, queueCounts, teamPerformance, type TeamRow } from '../../../domain/selectors'
 import { useNav } from '../../../state/navContext'
 import { useApp } from '../../../state/appContext'
@@ -7,6 +8,7 @@ import { age, dateTime, money, pct } from '../../format'
 import { SeverityBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
+import { RoiBadge, RoiLegend } from '../../primitives/RoiBadge'
 import { Card, PageHeader } from '../../primitives/Layout'
 import { FEATURED_INCIDENT } from '../Governance/Governance'
 import { TERMS } from '../../terms'
@@ -22,6 +24,8 @@ export function Overview() {
   const counts = useMemo(() => queueCounts(state), [state])
   const risk = useMemo(() => authorityAtRisk(state), [state])
   const found = useMemo(() => deriveFindings(state), [state])
+  const roi = useMemo(() => buildRoi(state), [state])
+  const company = useMemo(() => companyReturn(state, roi), [state, roi])
   // Where a problem has a finding, the map is the best place to understand it; otherwise the queue.
   const openIssue = (i: { id: string; kind: string }) => {
     const f = found.find((x) => x.id === `${i.kind === 'blocked' ? 'blocked' : 'conflict'}:${i.id}`)
@@ -66,6 +70,15 @@ export function Overview() {
         </div>
       ),
     },
+    {
+      key: 'return',
+      header: 'Return',
+      sort: (a, b) => (teamReturn(state, roi, a.team.id).multiple ?? -1) - (teamReturn(state, roi, b.team.id).multiple ?? -1),
+      render: (r) => {
+        const g = teamReturn(state, roi, r.team.id)
+        return <RoiBadge status={g.status} multiple={g.multiple} />
+      },
+    },
     { key: 'cost', header: 'AI operating cost', align: 'right', sort: (a, b) => a.aiCost - b.aiCost, render: (r) => money(r.aiCost) },
     { key: 'issues', header: 'Open issues', align: 'right', sort: (a, b) => a.openIssues - b.openIssues, render: (r) => (r.openIssues > 0 ? <span className="strong">{r.openIssues}</span> : <span className="muted">0</span>) },
   ]
@@ -104,12 +117,27 @@ export function Overview() {
         <section className="ask" aria-labelledby="ask-spend">
           <h2 id="ask-spend">{TERMS.askSpend}</h2>
           <p className="ask__stat">
-            <strong className="num">{pct(m.coverage, 0)}</strong> of AI workers have verified value ({m.verifiedWorkers} of {m.activeAi}).
+            <strong className="num">{fmtMultiple(company.multiple)}</strong> verified return on AI spend
+            <span className="ask__sub">{money(company.verified)} confirmed value against {money(company.cost)} a month. Synthetic data.</span>
           </p>
-          <p className="ask__text">{spend[0] ? `${spend[0].title}. ${spend[0].consequence}` : 'No mission shows rising cost without verified value right now.'}</p>
-          <Button variant="primary" onClick={() => go('workforce', spend[0]?.id)}>
-            {spend[0] ? TERMS.reviewSpend : 'Open the org map'}
-          </Button>
+          <div className="ask__counts" aria-label="Workers by return">
+            {(['green', 'amber', 'red', 'grey'] as const).map((c) => (
+              <span key={c} className="ask__count">
+                <RoiBadge status={c} />
+                <strong className="num">{company.counts[c]}</strong>
+              </span>
+            ))}
+          </div>
+          <p className="ask__text">
+            <strong className="num">{money(company.unprovenCost)}</strong> a month is spent on workers with no verified return.
+            {spend[0] ? ` ${spend[0].title}.` : ''}
+          </p>
+          <div className="ask__actions">
+            <Button variant="primary" onClick={() => go('workforce', 'registry:attention')}>
+              {TERMS.whoToReview}
+            </Button>
+            {spend[0] && <Button onClick={() => go('workforce', spend[0].id)}>{TERMS.reviewSpend}</Button>}
+          </div>
         </section>
 
         <section className="ask" aria-labelledby="ask-allowed">
@@ -276,7 +304,7 @@ export function Overview() {
         </Card>
 
         <div style={{ display: 'grid', gap: 'var(--s-5)' }}>
-          <Card title="Operating cost" subtitle="Monthly and modeled. Reported separately, never blended, never compared with value." flush>
+          <Card title="Operating cost" subtitle="Monthly and modeled. Reported separately and never blended. Return on cost, which compares cost with verified value only, is shown on Start here and in the Registry." flush>
             <dl className="cost">
               <div className="cost__row">
                 <div>
@@ -296,6 +324,8 @@ export function Overview() {
           </Card>
         </div>
       </div>
+
+      <RoiLegend />
 
       <Card title="Teams" subtitle="Value, cost and open issues by team. Click a column to sort. Bars share one scale." flush>
         <DataTable label="Teams" rows={teams} columns={teamColumns} rowKey={(r) => r.team.id} />
@@ -330,7 +360,15 @@ export function Overview() {
           </div>
           <div>
             <dt>AI operating cost and human labor cost</dt>
-            <dd>Modeled monthly inference and tooling cost for AI workers, and synthetic loaded monthly cost for people. Reported separately. No return, savings or profit is calculated.</dd>
+            <dd>Modeled monthly inference and tooling cost for AI workers, and synthetic loaded monthly cost for people. Reported separately. No savings or profit is calculated.</dd>
+          </div>
+          <div>
+            <dt>Return on cost</dt>
+            <dd>
+              Verified value divided by modeled monthly cost, trailing 30 days, for active AI workers. Estimated value is shown beside it and never counted. Green at 3× or more, amber from 1× to 3× or when only
+              estimated value exists, red under 1× or when there is no verified value and cost is rising 25% or more, grey when there is no value data. A person has no value records, so a person's figure is
+              the return of the AI workers they are accountable for. The thresholds are a policy setting and the data is synthetic.
+            </dd>
           </div>
           <div>
             <dt>Permission changed after work started</dt>

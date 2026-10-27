@@ -53,6 +53,12 @@ Use **Reset demo** (bottom of the sidebar) to restore the original data. State i
 
 The System opens on **Start here** with three plain questions: *Is anything stuck?*, *Is the AI spend justified?* and *What was the AI allowed to do?* Each has a live number and one button into the matching story; everything else (the full list, value, cost, teams) is under "More detail". The four screens are named for the question they answer: **Start here**, **Needs attention** (the work queue), **Org map** (the workforce map and registry) and **AI accountability** (the audit cases and incident replay). The org map opens on the most urgent issue the first time it is visited in a session, and a case page puts the incident replay first with the event-by-event record under "Technical record".
 
+## Who pays off: return on cost
+
+Every active AI worker has a **return on cost**: verified value divided by modeled monthly cost over the trailing 30 days, with a colour and a word. **Green** (pays off) is 3× or more; **amber** (thin or unproven) is 1× to 3× or only estimated value; **red** (not paying off) is under 1×, or no verified value with cost rising 25% or more; **grey** (no evidence) is no value data. Estimated value is shown beside the return as "potential, unconfirmed" and never counted. The thresholds live in one constant (`ROI_POLICY` in `src/domain/roi.ts`) and the data is synthetic, so treat the numbers as a demonstration of the method, not a measurement.
+
+It appears on **Start here** (company return, colour counts, the monthly spend with no verified return, and "See who to review"), in the **Registry** (a sortable Return column, a Return filter, and a bar that pauses the workers not paying off with one audit event), on every **worker profile**, and for missions, teams and people. A person has no value records of their own, so their figure is the return of the AI workers they are accountable for.
+
 ## Seeing the company: the Workforce Map
 
 The Workforce screen opens on a map of the whole organization (the registry table is the other tab). The executive sits at the top with reporting lines to the head of each team. Each team is a region, and each person who owns AI workers is a **pod**: the person with their accountable AI workers as dots. AI workers use the product's value encoding: solid = verified, hatched = estimated, outlined = unmeasured.
@@ -69,7 +75,7 @@ The Workforce screen opens on a map of the whole organization (the registry tabl
 
 Lenses (Ownership, Value and cost, Conflicts, Blocked, Authority, Missions) change what the map emphasizes. Every screen links in and out: the Overview, the Work Queue drawer and the Governance case page all open the same situation on the map, with a Back link.
 
-**About the cost comparison.** There is no time series and none is invented. Each AI worker has a *simulated* previous-30-day run cost from the same cost model as its current cost. The comparison is always labeled simulated, is never presented as a measurement, and is never used for a return or savings claim.
+**About the cost comparison.** There is no time series and none is invented. Each AI worker has a *simulated* previous-30-day run cost from the same cost model as its current cost. The comparison is always labeled simulated, is never presented as a measurement, and is labeled simulated everywhere it appears and is used only to flag rising cost, never to claim savings.
 
 ## Proving what was authorized: the Incident replay
 

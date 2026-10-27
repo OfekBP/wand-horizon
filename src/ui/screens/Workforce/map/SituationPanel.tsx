@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
 import { FINDING_LABEL, findings, missionSummary, type ChainLink, type Finding } from '../../../../domain/findings'
+import { buildRoi, missionReturn, teamReturn } from '../../../../domain/roi'
 import { teamPerformance } from '../../../../domain/selectors'
 import { useNav } from '../../../../state/navContext'
 import { useApp } from '../../../../state/appContext'
+import { RoiBadge } from '../../../primitives/RoiBadge'
 import { money, pct } from '../../../format'
 import { Badge, SeverityBadge } from '../../../primitives/Badge'
 import { Button } from '../../../primitives/Button'
@@ -119,6 +121,7 @@ function TeamView({ teamId }: { teamId: string }) {
   const lead = state.workers.find((w) => w.kind === 'human' && w.teamId === teamId && (w.ownerId === null || index.workerById.get(w.ownerId ?? '')?.ownerId === null))
   const touching = findings(state).filter((f) => f.reach.teamIds.includes(teamId))
   const missions = state.missions.filter((m) => state.workers.some((w) => w.missionId === m.id && w.teamId === teamId))
+  const ret = useMemo(() => teamReturn(state, buildRoi(state), teamId), [state, teamId])
   return (
     <>
       <div className="situation__kicker">
@@ -151,6 +154,12 @@ function TeamView({ teamId }: { teamId: string }) {
         <div>
           <dt>Workers with verified value</dt>
           <dd className="num">{pct(row.coverage)}</dd>
+        </div>
+        <div>
+          <dt>Return on cost (verified)</dt>
+          <dd>
+            <RoiBadge status={ret.status} multiple={ret.multiple} />
+          </dd>
         </div>
       </dl>
       <section aria-label="Findings in this team">
@@ -196,6 +205,7 @@ function MissionView({ missionId }: { missionId: string }) {
   const owner = index.workerById.get(mission.ownerId)
   const teams = [...new Set(state.workers.filter((w) => w.missionId === missionId).map((w) => index.teamById.get(w.teamId)?.name))]
   const touching = findings(state).filter((f) => f.reach.missionIds.includes(missionId))
+  const ret = useMemo(() => missionReturn(state, buildRoi(state), missionId), [state, missionId])
   return (
     <>
       <div className="situation__kicker">
@@ -231,6 +241,12 @@ function MissionView({ missionId }: { missionId: string }) {
         <div>
           <dt>Previous 30 days (simulated)</dt>
           <dd className="num">{money(s.priorCost)}</dd>
+        </div>
+        <div>
+          <dt>Return on cost (verified)</dt>
+          <dd>
+            <RoiBadge status={ret.status} multiple={ret.multiple} />
+          </dd>
         </div>
         <div>
           <dt>Teams</dt>

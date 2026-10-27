@@ -1,24 +1,62 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { findings } from '../../../domain/findings'
+import { buildRoi, groupReturn, ownerReturn, reviewList, ROI_LABEL } from '../../../domain/roi'
 import { classifyAiWorkers, filterWorkers, openConcerns, openConflicts, overviewMetrics, type WorkerFilter } from '../../../domain/selectors'
 import type { Worker } from '../../../domain/types'
 import { useNav } from '../../../state/navContext'
 import { useApp } from '../../../state/appContext'
+import { pauseWorkers } from '../../terms'
 import { money, pct } from '../../format'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
+import { RoiBadge, RoiLegend } from '../../primitives/RoiBadge'
 import { Card, PageHeader, Tabs } from '../../primitives/Layout'
 import { DataTable, type Column } from '../../primitives/Table'
 import { MapView } from './map/MapView'
+import { roiPreset, type RoiFilter } from './roiFilter'
 import { WorkerDrawer } from './WorkerDrawer'
 import './workforce.css'
 
 const PAGE = 50
 const initials = (name: string) => name.split(/[\s-]+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()
 
-function Registry() {
+/** Pauses the workers that are not paying off, with the same audit event the map's cost finding writes. */
+function PauseBar({ ids, cost }: { ids: string[]; cost: number }) {
+  const { act } = useApp()
+  const { notify } = useNav()
+  const [reason, setReason] = useState('Verified return is below target. Pausing until the owner can show confirmed value.')
+  const [error, setError] = useState<string | null>(null)
+  const submit = (e: FormEvent) => {
+    e.preventDefault()
+    const r = act({ type: 'PAUSE_WORKERS', workerIds: ids, reason })
+    if (!r.ok) return setError(r.error)
+    setError(null)
+    notify(`${ids.length} workers paused. Modeled run-rate is down ${money(cost)} a month.`)
+  }
+  if (ids.length === 0) return null
+  return (
+    <form className="pausebar" onSubmit={submit} aria-label="Pause the workers that are not paying off">
+      <div>
+        <strong className="num">{ids.length}</strong> of these are not paying off, costing <strong className="num">{money(cost)}</strong> a month.
+        <input className="input" aria-label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} />
+        {error && (
+          <div className="alert alert--error" role="alert">
+            {error}
+          </div>
+        )}
+      </div>
+      <Button variant="danger" type="submit" disabled={!reason.trim()}>
+        {pauseWorkers(ids.length)}
+      </Button>
+    </form>
+  )
+}
+
+function Registry({ preset }: { preset: RoiFilter }) {
   const { state, index } = useApp()
+  const [roiFilter, setRoiFilter] = useState<RoiFilter>(preset)
+  const roi = useMemo(() => buildRoi(state), [state])
   const [openId, setOpenId] = useState<string | null>(null)
   // The 500 AI workers are the registry's bulk, so they lead; people are one click away.
   const [filter, setFilter] = useState<WorkerFilter>({ q: '', kind: 'ai', teamId: 'all', status: 'all', value: 'all' })
@@ -37,7 +75,19 @@ function Registry() {
     setPage(0)
   }
 
-  const rows = useMemo(() => filterWorkers(state, filter), [state, filter])
+  /** AI workers have their own return; a person has the roll-up of the AI workers they are accountable for. */
+  const groupOf = (w: Worker) => (w.kind === 'ai' ? groupReturn(roi, [w]) : ownerReturn(state, roi, w.id))
+  const rows = useMemo(() => {
+    const base = filterWorkers(state, filter)
+    if (roiFilter === 'all') return base
+    return base.filter((w) => {
+      const g = w.kind === 'ai' ? groupReturn(roi, [w]) : ownerReturn(state, roi, w.id)
+      if (g.workers === 0) return false
+      return roiFilter === 'attention' ? g.status === 'red' || g.status === 'amber' : g.status === roiFilter
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, filter, roiFilter, roi])
+  const notPaying = useMemo(() => reviewList(state, roi, ['red']).filter((w) => rows.some((r) => r.id === w.id)), [state, roi, rows])
   const classes = useMemo(() => classifyAiWorkers(state), [state])
   const pages = Math.max(1, Math.ceil(rows.length / PAGE))
   const current = Math.min(page, pages - 1)
@@ -76,6 +126,21 @@ function Registry() {
       },
     },
     {
+      key: 'return',
+      header: 'Return',
+      sort: (a, b) => (groupOf(a).multiple ?? -1) - (groupOf(b).multiple ?? -1),
+      render: (w) => {
+        const g = groupOf(w)
+        if (g.workers === 0) return <span className="muted" aria-label="No AI workers to measure">—</span>
+        return (
+          <span>
+            <RoiBadge status={g.status} multiple={g.multiple} />
+            {w.kind === 'human' && <span className="cell-sub"> of {g.workers} AI workers they own</span>}
+          </span>
+        )
+      },
+    },
+    {
       key: 'status',
       header: 'Status',
       render: (w) =>
@@ -93,6 +158,8 @@ function Registry() {
         <strong className="num">{pct(metrics.coverage, 1)}</strong> have verified value · <strong className="num">{summary.inConflict}</strong> are in an open conflict ·{' '}
         <strong className="num">{summary.withConcern}</strong> have an open performance concern.
       </p>
+      <RoiLegend />
+      {(roiFilter === 'attention' || roiFilter === 'red') && <PauseBar ids={notPaying.map((w) => w.id)} cost={notPaying.reduce((a, w) => a + w.monthlyCost, 0)} />}
       <Card flush>
         <div className="filters">
           <div className="search">
@@ -119,6 +186,14 @@ function Registry() {
             <option value="verified">Verified</option>
             <option value="estimatedOnly">Estimated only</option>
             <option value="unmeasured">Unmeasured</option>
+          </select>
+          <select className="select" aria-label="Return" value={roiFilter} onChange={(e) => { setRoiFilter(e.target.value as RoiFilter); setPage(0) }}>
+            <option value="all">Any return</option>
+            <option value="attention">Needs review (red and amber)</option>
+            <option value="green">{ROI_LABEL.green}</option>
+            <option value="amber">{ROI_LABEL.amber}</option>
+            <option value="red">{ROI_LABEL.red}</option>
+            <option value="grey">{ROI_LABEL.grey}</option>
           </select>
           <select className="select" aria-label="Status" value={filter.status} onChange={(e) => patch({ status: e.target.value as WorkerFilter['status'] })}>
             <option value="all">Any status</option>
@@ -154,7 +229,7 @@ function Registry() {
 export function Workforce() {
   const { state } = useApp()
   const { selectedId, go } = useNav()
-  const view = selectedId === 'registry' ? 'registry' : 'map'
+  const view = selectedId === 'registry' || selectedId?.startsWith('registry:') ? 'registry' : 'map'
   const open = useMemo(() => findings(state).length, [state])
   const people = state.workers.filter((w) => w.kind === 'human').length
   const aiCount = state.workers.filter((w) => w.kind === 'ai').length
@@ -175,7 +250,7 @@ export function Workforce() {
           { key: 'registry', label: 'Registry', count: people + aiCount },
         ]}
       />
-      {view === 'map' ? <MapView /> : <Registry />}
+      {view === 'map' ? <MapView /> : <Registry key={selectedId} preset={roiPreset(selectedId)} />}
     </div>
   )
 }

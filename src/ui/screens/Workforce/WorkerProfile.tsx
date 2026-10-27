@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { buildRoi, ownerReturn, ROI_ACTION, ROI_LABEL, ROI_POLICY, verdict } from '../../../domain/roi'
 import { classifyAiWorkers } from '../../../domain/selectors'
 import type { PermissionChangedEvent, Worker } from '../../../domain/types'
 import { useNav } from '../../../state/navContext'
@@ -7,8 +8,102 @@ import { EventTimeline } from '../../audit/EventTimeline'
 import { money } from '../../format'
 import { Badge, StatusBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
+import { RoiBadge } from '../../primitives/RoiBadge'
 import { PermissionsList } from './PermissionsList'
 import { TERMS } from '../../terms'
+
+/** What a manager needs first: does this worker earn what it costs, and what should I do about it? */
+function ReturnBlock({ worker }: { worker: Worker }) {
+  const { state } = useApp()
+  const { go } = useNav()
+  const model = useMemo(() => buildRoi(state), [state])
+  const source = state.values.find((v) => v.workerId === worker.id && v.basis === 'verified')?.source
+
+  if (worker.kind === 'ai') {
+    const r = model.byWorker.get(worker.id)
+    if (!r) {
+      return (
+        <section className="roi" aria-label="Return on cost">
+          <div className="section-label">Return on cost</div>
+          <p className="small muted">Paused, so it is not counted in any return and incurs no run cost.</p>
+        </section>
+      )
+    }
+    return (
+      <section className="roi" aria-label="Return on cost">
+        <div className="section-label">Return on cost</div>
+        <div className="roi__head">
+          <RoiBadge status={r.status} multiple={r.multiple} />
+          <span className="small">
+            Suggested: <strong>{ROI_ACTION[r.status]}</strong>
+          </span>
+        </div>
+        <p className="small">{verdict(r, source)}</p>
+        <dl className="roi__grid">
+          <div>
+            <dt>Verified value</dt>
+            <dd className="num">{money(r.verified)}</dd>
+          </div>
+          <div>
+            <dt>Modeled cost</dt>
+            <dd className="num">{money(r.cost)}</dd>
+          </div>
+          <div>
+            <dt>Net per month</dt>
+            <dd className="num">{r.net === null ? 'not measurable' : `${r.net >= 0 ? '+' : '-'}${money(Math.abs(r.net))}`}</dd>
+          </div>
+          <div>
+            <dt>ROI</dt>
+            <dd className="num">{r.roiPct === null ? 'n/a' : `${r.roiPct >= 0 ? '+' : ''}${Math.round(r.roiPct).toLocaleString('en-US')}%`}</dd>
+          </div>
+          <div>
+            <dt>Potential, unconfirmed</dt>
+            <dd className="num">
+              {money(r.estimated)} <span className="xs muted">never counted</span>
+            </dd>
+          </div>
+        </dl>
+        <p className="xs muted">
+          Green at {ROI_POLICY.greenAt}× or more, red under {ROI_POLICY.redBelow}×. Verified value over modeled cost, trailing 30 days, synthetic data.
+        </p>
+      </section>
+    )
+  }
+
+  const g = ownerReturn(state, model, worker.id)
+  if (g.workers === 0) return null
+  const mine = state.workers.filter((w) => w.ownerId === worker.id && model.byWorker.has(w.id))
+  const weakest = mine
+    .map((w) => ({ w, r: model.byWorker.get(w.id)! }))
+    .filter((x) => x.r.status === 'red' || x.r.status === 'amber')
+    .sort((a, b) => (a.r.status === b.r.status ? b.r.cost - a.r.cost : a.r.status === 'red' ? -1 : 1))
+    .slice(0, 3)
+  return (
+    <section className="roi" aria-label="Return of what they run">
+      <div className="section-label">Return of what they run</div>
+      <div className="roi__head">
+        <RoiBadge status={g.status} multiple={g.multiple} />
+        <span className="small">{g.workers} AI workers, {money(g.cost)} a month</span>
+      </div>
+      <p className="small">
+        {(['green', 'amber', 'red', 'grey'] as const).map((c) => `${g.counts[c]} ${ROI_LABEL[c].toLowerCase()}`).join(' · ')}. {money(g.unprovenCost)} a month has no verified value.
+      </p>
+      {weakest.length > 0 && (
+        <ul className="mini-list">
+          {weakest.map(({ w, r }) => (
+            <li key={w.id}>
+              <button className="link" onClick={() => go('workforce', w.id)}>
+                {w.name}
+              </button>
+              <RoiBadge status={r.status} multiple={r.multiple} compact />
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="xs muted">A person has no value records of their own. This is the return of the AI workers they are accountable for.</p>
+    </section>
+  )
+}
 
 /** One worker, in full. Shared by the registry drawer and the map's situation panel. */
 export function WorkerProfile({ worker, onChangePermissions }: { worker: Worker; onChangePermissions?: () => void }) {
@@ -86,6 +181,8 @@ export function WorkerProfile({ worker, onChangePermissions }: { worker: Worker;
           </div>
         )}
       </dl>
+
+      <ReturnBlock worker={worker} />
 
       <div>
         <div className="section-label" style={{ marginBottom: 8 }}>

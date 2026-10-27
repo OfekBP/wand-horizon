@@ -39,7 +39,7 @@ Synthetic local data only: 50 humans and 500 AI workers, trailing 30-day window 
 - Core workflows: reassign a pending human decision (status stays awaiting approval, owner changes, audit event recorded); resolve a conflict between two workers; change an AI worker's permissions while an operation is in progress and run its execution step; reconstruct historical permissions and event sequence for an operation.
 - Operation statuses are exactly `in_progress`, `awaiting_approval`, `executed`, `prevented`. "Blocked" is derived from `awaiting_approval`.
 - Event ordering is by global `seq`; timestamps are display-only. Events are append-only.
-- Verified, estimated and unmeasured value are always shown separately and never summed. No ROI, savings or profit claims. No trend lines: value is a 30-day aggregate.
+- Verified, estimated and unmeasured value are always shown separately and never summed. Return on cost is shown from verified value only, against modeled cost, on synthetic data, with estimated value never counted and the thresholds stated; no savings or profit claims. No trend lines: value is a 30-day aggregate.
 - No backend, real authentication, real model calls, or unnecessary dependencies. React, TypeScript and Vite.
 - The "Acting as" role selector is simulated: it sets the actor in audit events and is not authentication or authorization.
 - This is a browser simulation and must not claim production-grade security.

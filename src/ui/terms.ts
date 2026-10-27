@@ -9,6 +9,7 @@ export const TERMS = {
   askAllowed: 'What was the AI allowed to do?',
   investigateUrgent: 'Investigate the most urgent',
   reviewSpend: 'Review the spend',
+  whoToReview: 'See who to review',
   replayIncident: 'Replay a past incident',
   moveDecision: 'Move the decision',
   runStep: 'Run execution step',

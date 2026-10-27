@@ -142,3 +142,10 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 .more[open] > summary .chev { transform: rotate(180deg); }
 .more__body { display: grid; gap: var(--s-5); margin-top: var(--s-5); }
 @media (max-width: 1100px) { .asks { grid-template-columns: minmax(0, 1fr); } }
+
+.ask__sub { display: block; color: var(--ink-3); font-size: var(--t-xs); font-weight: 400; margin-top: 2px; }
+.ask__counts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s-2) var(--s-3); }
+.ask__count { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: var(--t-sm); }
+.ask__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: auto; }
+.ask__actions .btn { margin-top: 0; }
+.roi-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 var(--s-4); max-width: 110ch; }

@@ -280,7 +280,13 @@ export function createInitialState(): AppState {
   order.forEach((id, i) => {
     const w = ai.find((x) => x.id === id)!
     if (i < VERIFIED_N) {
-      values.push({ id: `v-${pad(values.length + 1, 4)}`, workerId: id, basis: 'verified', amount: round(w.monthlyCost * rng.float(4, 22), 100), source: sourceOf(w.teamId) })
+      // The random draw is unchanged (so nothing else in the fixtures moves). A deterministic spread on top of it gives
+      // a realistic portfolio: about 6% of verified workers earn less than they cost, about 10% only a thin return.
+      const draw = rng.float(4, 22)
+      const frac = (draw - 4) / 18
+      const multiple = i % 16 === 3 ? 0.3 + 0.6 * frac : i % 10 === 7 ? 1.2 + 1.6 * frac : draw
+      const amount = multiple === draw ? round(w.monthlyCost * draw, 100) : Math.max(10, round(w.monthlyCost * multiple, 10))
+      values.push({ id: `v-${pad(values.length + 1, 4)}`, workerId: id, basis: 'verified', amount, source: sourceOf(w.teamId) })
       if (rng.float() < 0.4)
         values.push({ id: `v-${pad(values.length + 1, 4)}`, workerId: id, basis: 'estimated', amount: round(w.monthlyCost * rng.float(2, 10), 100), source: 'Time-saved model (hours x loaded rate)' })
     } else if (i < VERIFIED_N + ESTIMATED_ONLY_N) {

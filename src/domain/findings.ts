@@ -183,7 +183,7 @@ function conflictFindings(state: AppState): Finding[] {
   })
 }
 
-const COST_RISE = 0.25
+export const COST_RISE = 0.25
 const COST_MIN_WORKERS = 5
 
 function costFindings(state: AppState): Finding[] {

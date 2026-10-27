@@ -240,7 +240,7 @@ export function Landing() {
                 </div>
                 <div>
                   <dt>Three kinds of value, kept apart</dt>
-                  <dd>Verified, estimated and unmeasured value are never added together. No return on investment, savings or profit is calculated anywhere.</dd>
+                  <dd>Verified, estimated and unmeasured value are never added together. The return shown is verified value over modeled cost only, on synthetic data; estimated value never counts, and no savings or profit is calculated.</dd>
                 </div>
                 <div>
                   <dt>Simulated comparisons</dt>

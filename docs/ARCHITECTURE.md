@@ -53,7 +53,7 @@ Value records attach to AI workers only. Each active AI worker is in exactly one
 - **Verified coverage:** active AI workers with at least one verified record ÷ all active AI workers. A count of workers, not dollar-weighted.
 - **AI operating cost** and **Human labor cost:** modeled monthly cost and synthetic loaded labor cost, reported separately and never blended.
 
-No return on investment, savings or profit is calculated anywhere.
+**Return on cost** (added later): verified value ÷ modeled monthly cost for active AI workers, trailing 30 days (`src/domain/roi.ts`). Estimated value is carried beside it and never counted. Thresholds live in one constant, `ROI_POLICY` (green at 3× or more, red under 1×); a worker with no verified value is amber when it has estimates, red when its cost is rising 25% or more, and grey when it has no value data at all. People have no return of their own; a person's figure is the roll-up of the AI workers they are accountable for. The data is synthetic and the thresholds are a policy choice, not a measurement. No savings or profit is calculated.
 
 ## Decision log
 

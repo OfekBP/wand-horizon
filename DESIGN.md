@@ -274,6 +274,9 @@ Soft but not bubbly. Controls that act (buttons, badges, chips, toast, role sele
 ### Start here (the three questions)
 - The System opens on three equal question cards (Is anything stuck? Is the AI spend justified? What was the AI allowed to do?), each with one live number and one primary pill button. Detail sits under a collapsed "More detail" disclosure. A dismissible accent-wash strip points first-time visitors to the demo.
 
+### Return on cost signal
+- A pill with a shape, a multiple and a word, never colour alone: green check "Pays off", amber triangle "Thin or unproven", red cross "Not paying off", grey dash "No evidence". Colours reuse the existing ok, high, critical and medium tokens; red and amber keep their meaning of "act on this". A one-line legend states the rule wherever the signal appears.
+
 ### Workforce map and findings
 - A deterministic organization drawing: team regions, pods of AI dots under the person who owns them, elbow reporting lines through the gaps. Value uses the same solid / hatched / outlined encoding. A ranked findings list drives the camera; the situation panel docks on the right (stacks under the map below 1100px). Red is used only for the critical or high finding being explained.
 
