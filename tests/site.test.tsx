@@ -14,6 +14,7 @@ async function goTo(hash: string) {
 describe('site routes', () => {
   it('maps hashes to the landing page or the System', () => {
     for (const h of ['', '#', '#/', '#/home']) expect(routeOf(h)).toBe('home')
+    expect(routeOf('#/demo')).toBe('demo')
     for (const h of ['#/system', '#/overview', '#/queue/op-a1', '#/workforce/registry', '#/governance/op-d1']) expect(routeOf(h)).toBe('system')
   })
 
@@ -27,9 +28,19 @@ describe('site routes', () => {
     expect(screen.getByText(/What an AI worker was authorized to do at a specific moment|what an AI worker was authorized to do at a specific moment/)).toBeInTheDocument()
   })
 
-  it('does not mention a demo video that does not exist', () => {
+  it('links the landing page to the demo player', () => {
     render(<Root />)
-    expect(screen.queryByText(/demo video|watch the demo/i)).not.toBeInTheDocument()
+    for (const link of screen.getAllByRole('link', { name: /Watch the demo/ })) expect(link).toHaveAttribute('href', '#/demo')
+  })
+
+  it('opens the demo player from its URL with its chapters, ready to play', () => {
+    window.location.hash = '#/demo'
+    render(<Root />)
+    expect(routeOf(window.location.hash)).toBe('demo')
+    expect(screen.getByRole('heading', { level: 1, name: /Wand Horizon in about/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Play the demo' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /Reconstruct an incident/ }).length).toBeGreaterThan(0)
+    expect(screen.getByText(/not a rendered video file/)).toBeInTheDocument()
   })
 
   it('loads the System directly from its URL and links back to the introduction', async () => {

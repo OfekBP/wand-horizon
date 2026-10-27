@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
-import { DEMO_VIDEO_URL, GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
-import { SYSTEM_HASH } from '../../state/route'
+import { GITHUB_REPO_URL, SITE_CREDIT, SITE_NAME } from '../../config/site'
+import { DEMO_HASH, SYSTEM_HASH } from '../../state/route'
 import './landing.css'
 
 const LOGO = '/wand-horizon-logo.png'
@@ -152,11 +152,7 @@ export function Landing() {
             <button onClick={() => scrollToId('challenges')}>Challenges</button>
             <button onClick={() => scrollToId('approach')}>Approach</button>
             <button onClick={() => scrollToId('honesty')}>About the data</button>
-            {DEMO_VIDEO_URL && (
-              <a href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer noopener">
-                Demo video
-              </a>
-            )}
+            <a href={DEMO_HASH}>Demo</a>
           </nav>
           <a className="lbtn lbtn--primary lbtn--sm" href={SYSTEM_HASH}>
             Explore the System
@@ -179,6 +175,9 @@ export function Landing() {
               <div className="actions">
                 <a className="lbtn lbtn--primary" href={SYSTEM_HASH}>
                   Explore the System <ArrowIcon />
+                </a>
+                <a className="lbtn lbtn--ghost" href={DEMO_HASH}>
+                  Watch the demo
                 </a>
                 <RepoLink className="lbtn lbtn--ghost" />
               </div>
@@ -292,11 +291,9 @@ export function Landing() {
                   Explore the System <ArrowIcon />
                 </a>
                 <RepoLink className="lbtn lbtn--ghost" />
-                {DEMO_VIDEO_URL && (
-                  <a className="lbtn lbtn--ghost" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer noopener">
-                    Watch the demo
-                  </a>
-                )}
+                <a className="lbtn lbtn--ghost" href={DEMO_HASH}>
+                  Watch the demo
+                </a>
               </div>
             </Reveal>
           </div>

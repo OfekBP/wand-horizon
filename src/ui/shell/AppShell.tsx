@@ -2,8 +2,8 @@ import { useMemo, type ReactNode } from 'react'
 import { findings } from '../../domain/findings'
 import { authorityAtRisk, queueCounts } from '../../domain/selectors'
 import type { SimRole } from '../../domain/types'
-import { DEMO_VIDEO_URL, GITHUB_REPO_URL, SITE_CREDIT } from '../../config/site'
-import { HOME_HASH } from '../../state/route'
+import { GITHUB_REPO_URL, SITE_CREDIT } from '../../config/site'
+import { DEMO_HASH, HOME_HASH } from '../../state/route'
 import { SCREEN_LABEL, useNav, type Screen } from '../../state/nav'
 import { useApp } from '../../state/store'
 import { Button } from '../primitives/Button'
@@ -93,11 +93,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <a className="topbar__link" href={GITHUB_REPO_URL} target="_blank" rel="noreferrer noopener">
             GitHub
           </a>
-          {DEMO_VIDEO_URL && (
-            <a className="topbar__link" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer noopener">
-              Demo video
-            </a>
-          )}
+          <a className="topbar__link" href={DEMO_HASH}>
+            Demo
+          </a>
           <div className="who" title="Simulated role. Sets the actor recorded in audit events. Not authentication or authorization.">
             <span>
               <span className="who__prefix">Simulated · </span>

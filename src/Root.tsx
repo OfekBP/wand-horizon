@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react'
 import App from './App'
 import { SITE_NAME, SITE_TAGLINE } from './config/site'
-import { routeOf } from './state/route'
+import { routeOf, type Route } from './state/route'
+import { Demo } from './ui/demo/Demo'
 import { Landing } from './ui/landing/Landing'
 
-/** Chooses between the landing page and the System from the URL hash. */
+/** The demo player embeds the System with ?embed=1: the app only, with the site-level links hidden. */
+const EMBED = typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('embed')
+
+const TITLE: Record<Route, string> = {
+  home: `${SITE_NAME}: ${SITE_TAGLINE}`,
+  demo: `Demo · ${SITE_NAME}`,
+  system: `System · ${SITE_NAME}`,
+}
+
+/** Chooses between the landing page, the demo and the System from the URL hash. */
 export default function Root() {
-  const [route, setRoute] = useState(() => routeOf(window.location.hash))
+  const [route, setRoute] = useState<Route>(() => (EMBED ? 'system' : routeOf(window.location.hash)))
 
   useEffect(() => {
+    if (EMBED) return
     const onHash = () => {
       const next = routeOf(window.location.hash)
       setRoute((prev) => {
@@ -22,8 +33,11 @@ export default function Root() {
 
   useEffect(() => {
     document.documentElement.dataset.route = route
-    document.title = route === 'home' ? `${SITE_NAME}: ${SITE_TAGLINE}` : `System · ${SITE_NAME}`
+    if (EMBED) document.documentElement.dataset.embed = '1'
+    document.title = TITLE[route]
   }, [route])
 
-  return route === 'home' ? <Landing /> : <App />
+  if (route === 'home') return <Landing />
+  if (route === 'demo') return <Demo />
+  return <App />
 }

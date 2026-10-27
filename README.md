@@ -27,6 +27,7 @@ The whole site uses the URL hash, so direct loads and refreshes work on any stat
 | URL | Page |
 | --- | --- |
 | `/` or `/#/` | Introduction landing page |
+| `/#/demo` | Product demo player |
 | `/#/system` | The System (opens on Overview); `#/overview`, `#/queue`, `#/workforce`, `#/governance` and their deep links also open the System |
 
 Set these at build time (a `.env` file or the host's build settings); see `src/config/site.ts`:
@@ -34,7 +35,12 @@ Set these at build time (a `.env` file or the host's build settings); see `src/c
 | Variable | Purpose |
 | --- | --- |
 | `VITE_GITHUB_REPO_URL` | The repository URL for the "View GitHub Repository" buttons. Defaults to `https://github.com/OfekBP/wand-horizon`. |
-| `VITE_DEMO_VIDEO_URL` | Demo video link. There is no video yet; while this is empty no demo link is shown anywhere. |
+
+## The product demo
+
+`/#/demo` plays a deterministic, roughly 80-second walkthrough of the real application: the executive overview, a conflict and a blocked decision on the workforce map (the decision is actually moved, writing a real audit event), and the reconstruction of a historical authorization incident. It is **not a rendered video file**. The player embeds the System in an iframe (`/?embed=1`) on its own fresh state and drives it with a scripted cursor, real clicks and captions, so every number on screen is the product's own. Chapters are clickable (each restarts the run from that chapter), and there are pause and mute controls. The background music is generated in the browser with the Web Audio API and starts only from the Play button.
+
+The script lives in `src/ui/demo/script.ts`; to change the walkthrough edit the scenes there. If the application's labels change, scenes skip a missing element rather than stop.
 
 Use **Reset demo** (bottom of the sidebar) to restore the original data. State is in memory only, so a refresh also resets it.
 

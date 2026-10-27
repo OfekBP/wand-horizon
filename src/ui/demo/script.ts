@@ -1,0 +1,177 @@
+/**
+ * The demo script. It is a deterministic walkthrough of the real application: each scene navigates the embedded
+ * System (an iframe of this same app, on its own fresh in-memory state), moves a cursor to real elements and clicks
+ * them, so every number, finding and audit event on screen comes from the actual product.
+ * Nothing here is a mock-up; if an element is not found the scene simply carries on.
+ */
+
+export interface Caption {
+  step: string
+  title: string
+  body: string
+}
+
+export interface CardText {
+  eyebrow?: string
+  title: string
+  body?: string
+  action?: boolean
+}
+
+/** What a scene is allowed to do. Implemented by the player. */
+export interface Ctx {
+  /** Resolves after `ms` of playing time. Pausing stops the clock; seeking cancels the scene. */
+  wait: (ms: number) => Promise<void>
+  go: (hash: string) => void
+  /** The embedded System's current hash. */
+  hash: () => string
+  find: <T extends HTMLElement>(look: (d: Document) => T | null | undefined, timeoutMs?: number) => Promise<T | null>
+  point: (el: HTMLElement | null, fx?: number, fy?: number) => Promise<void>
+  click: (el: HTMLElement | null) => Promise<void>
+  caption: (c: Caption | null) => void
+  card: (c: CardText | null) => void
+  showCursor: (visible: boolean) => void
+}
+
+export interface Scene {
+  id: string
+  label: string
+  summary: string
+  /** Nominal length in seconds; the scene is padded to it so the timeline is stable. */
+  seconds: number
+  run: (ctx: Ctx) => Promise<void>
+}
+
+/** Matches an element by its own visible text. */
+function byText(d: Document, selector: string, re: RegExp): HTMLElement | null {
+  const all = Array.from(d.querySelectorAll<HTMLElement>(selector))
+  return all.find((e) => re.test((e.textContent ?? '').trim())) ?? null
+}
+
+const finding = (prefix: string) => (d: Document) => d.querySelector<HTMLElement>(`button.finding[aria-label^="${prefix}"]`)
+const heading = (re: RegExp) => (d: Document) => byText(d, 'h1, h2, h3, h4, .card__title, .section-label', re)
+
+export const SCENES: Scene[] = [
+  {
+    id: 'problem',
+    label: 'The problem',
+    summary: 'A company of 50 people and 500 AI workers cannot see itself or prove what its AI was allowed to do.',
+    seconds: 9,
+    async run(c) {
+      c.go('#/overview')
+      c.showCursor(false)
+      c.card({
+        eyebrow: 'Wand Horizon',
+        title: '50 people. 500 AI workers.',
+        body: 'Who owns what? What is stuck? And when an AI worker acts, who can prove it was allowed to?',
+      })
+      await c.wait(4800)
+      c.card({
+        eyebrow: 'In this demo',
+        title: 'See it. Decide. Then prove it.',
+        body: 'The real product, running on synthetic data.',
+      })
+    },
+  },
+  {
+    id: 'overview',
+    label: 'Executive overview',
+    summary: 'Value, cost and what needs a decision, with verified, estimated and unmeasured value kept apart.',
+    seconds: 14,
+    async run(c) {
+      c.card(null)
+      c.caption({ step: 'See', title: 'The executive overview', body: 'What is blocked, ranked by severity, beside value that is verified, estimated or unmeasured. Never blended.' })
+      c.showCursor(true)
+      await c.point(await c.find(heading(/Needs a decision/)), 0.2, 0.5)
+      await c.wait(1800)
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.card--night')), 0.3, 0.2)
+      await c.wait(1500)
+      await c.point(await c.find(heading(/^Value$/)), 0.1, 0.5)
+      await c.wait(1800)
+      c.caption({ step: 'See', title: 'From a number to the cause', body: 'Every row opens the situation behind it on the workforce map.' })
+      await c.click(await c.find((d) => byText(d, 'a, button', /findings on the map/i)))
+    },
+  },
+  {
+    id: 'conflict',
+    label: 'A conflict on the map',
+    summary: 'The workforce map draws ownership and finds two missions working against each other.',
+    seconds: 15,
+    async run(c) {
+      c.go('#/workforce')
+      await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
+      c.caption({ step: 'Understand', title: 'The workforce map', body: 'Each person owns a pod of AI workers. Findings are derived from live data, never stored.' })
+      c.showCursor(true)
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.mapview__stage')), 0.5, 0.45)
+      await c.wait(2200)
+      await c.click(await c.find(finding('Conflicting objectives')))
+      c.caption({ step: 'Understand', title: 'Two missions, one resource', body: 'Pay suppliers early and Minimize idle cash are working against each other on one liquidity buffer.' })
+      await c.wait(1500)
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.situation')), 0.5, 0.35)
+    },
+  },
+  {
+    id: 'blocked',
+    label: 'A blocked decision',
+    summary: 'A $2.4M settlement waits on an approver who is out of office; the decision moves to someone available.',
+    seconds: 16,
+    async run(c) {
+      // Each chapter can be the first one played, so it opens its own page when it is not already there.
+      if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
+      await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
+      c.showCursor(true)
+      await c.click(await c.find(finding('Blocked decision')))
+      c.caption({ step: 'Decide', title: 'A $2.4M settlement is blocked', body: 'Its approver is out of office with no delegate, and the custodian cut-off is hours away.' })
+      await c.wait(2200)
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.situation')), 0.5, 0.4)
+      await c.wait(1800)
+      await c.click(await c.find((d) => byText(d, 'button', /^Move the decision$/)))
+      c.caption({ step: 'Decide', title: 'The decision moves to someone available', body: 'An audit event is written, and the finding clears from the map and the queue together.' })
+      await c.wait(3500)
+    },
+  },
+  {
+    id: 'replay',
+    label: 'Reconstruct an incident',
+    summary: 'Scrub a real incident and see what the AI worker was authorized to do then, beside what is permitted today.',
+    seconds: 20,
+    async run(c) {
+      c.go('#/governance/op-d1')
+      await c.find((d) => d.querySelector<HTMLElement>('.rp'))
+      c.caption({ step: 'Prove', title: 'Reconstruct the incident', body: 'A wire was executed. What was the AI worker authorized to do at that moment?' })
+      c.showCursor(true)
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.rp__lanes')), 0.5, 0.5)
+      await c.wait(1500)
+      await c.click(await c.find((d) => d.querySelector<HTMLElement>('.rp__mark')))
+      await c.wait(1200)
+      for (let i = 0; i < 6; i++) {
+        const next = await c.find((d) => byText(d, 'button', /^Next$/), 800)
+        if (!next || (next as HTMLButtonElement).disabled) break
+        await c.click(next)
+        if (i === 1) c.caption({ step: 'Prove', title: 'Authorized then, permitted now', body: 'Hatched bands mark where the authority at that point differs from today. The stored decision never changes.' })
+        if (i === 3) c.caption({ step: 'Prove', title: 'Evidence from the record', body: 'Rebuilt from the append-only permission log in sequence order, with who changed what and who was accountable.' })
+        await c.wait(1900)
+      }
+      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.rp__compare')), 0.5, 0.5)
+    },
+  },
+  {
+    id: 'outro',
+    label: 'Try it yourself',
+    summary: 'One workforce. Full accountability.',
+    seconds: 8,
+    async run(c) {
+      c.caption(null)
+      c.showCursor(false)
+      c.card({
+        eyebrow: 'Wand Horizon',
+        title: 'One workforce. Full accountability.',
+        body: 'Everything you just saw ran in the real app on synthetic data.',
+        action: true,
+      })
+    },
+  },
+]
+
+export const TOTAL_SECONDS = SCENES.reduce((a, s) => a + s.seconds, 0)
+export const SCENE_STARTS = SCENES.map((_, i) => SCENES.slice(0, i).reduce((a, s) => a + s.seconds, 0))

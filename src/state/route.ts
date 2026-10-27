@@ -3,16 +3,18 @@
  * without server rewrites:
  *
  *   #/ (or empty, or #/home)           Introduction landing page
+ *   #/demo                             Product demo (a scripted walkthrough of the real System)
  *   #/system, #/overview, #/queue ...  the System (the application); #/system opens its Overview
- *
- * To add a demo video page later, add a 'demo' route here and render it in Root.tsx.
  */
-export type Route = 'home' | 'system'
+export type Route = 'home' | 'demo' | 'system'
 
 export function routeOf(hash: string): Route {
   const first = hash.replace(/^#\/?/, '').split('/')[0]
-  return first === '' || first === 'home' ? 'home' : 'system'
+  if (first === '' || first === 'home') return 'home'
+  if (first === 'demo') return 'demo'
+  return 'system'
 }
 
 export const HOME_HASH = '#/'
+export const DEMO_HASH = '#/demo'
 export const SYSTEM_HASH = '#/system'
