@@ -358,34 +358,3 @@ export function governanceStats(state: AppState, sinceIso: string): GovernanceSt
     replayVerified: evals.filter((e) => replayMatches(state.events, e)).length,
   }
 }
-
-export interface Scenario {
-  key: 'reassign' | 'resolve' | 'permission' | 'history'
-  title: string
-  done: boolean
-}
-
-/** Scenario progress is derived from real events recorded after the demo's seed. Nothing is stored. */
-export function scenarioProgress(state: AppState): Scenario[] {
-  const after = state.events.filter((e) => e.seq > seedSeq(state))
-  const changes = after.filter(isPermissionChange)
-  const evals = after.filter(isEvaluation)
-  const reassigned = after.some((e) => e.type === 'OwnerReassigned')
-  const resolved = after.some((e) => e.type === 'ConflictResolved')
-  const permissionThenRun = evals.some((ev) => changes.some((c) => c.seq < ev.seq))
-  const decisionHolds = evals.some((ev) => changes.some((c) => c.seq > ev.seq && c.workerId === ev.workerId && c.scope === ev.requiredScope))
-  return [
-    { key: 'reassign', title: 'Reassign a blocked decision', done: reassigned },
-    { key: 'resolve', title: 'Resolve a conflict', done: resolved },
-    { key: 'permission', title: 'Change a permission, then run the operation', done: permissionThenRun },
-    { key: 'history', title: 'Change it again after execution and see the stored decision hold', done: decisionHolds },
-  ]
-}
-
-/** The last event that existed when the demo was seeded. */
-function seedSeq(state: AppState): number {
-  const seed = Date.parse(state.seedClock)
-  let last = 0
-  for (const e of state.events) if (Date.parse(e.at) <= seed) last = e.seq
-  return last
-}

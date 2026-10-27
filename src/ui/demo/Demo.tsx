@@ -28,6 +28,7 @@ export function Demo() {
   const paused = useRef(false)
   const scaleRef = useRef(0.8)
   const music = useRef<Music | null>(null)
+  const mutedRef = useRef(false)
 
   const [status, setStatus] = useState<Status>('idle')
   const [sceneIdx, setSceneIdx] = useState(0)
@@ -177,8 +178,6 @@ export function Demo() {
     },
     [reload],
   )
-
-  const mutedRef = useRef(false)
 
   const togglePause = () => {
     if (status === 'playing') {

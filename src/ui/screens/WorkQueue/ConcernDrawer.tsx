@@ -1,6 +1,6 @@
 import type { PerformanceConcern } from '../../../domain/types'
-import { useNav } from '../../../state/nav'
-import { useApp } from '../../../state/store'
+import { useNav } from '../../../state/navContext'
+import { useApp } from '../../../state/appContext'
 import { Badge, SeverityBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Overlay } from '../../primitives/Overlay'

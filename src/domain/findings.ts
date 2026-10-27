@@ -1,4 +1,5 @@
 import { authorityAtRisk, blockedOperations, classifyAiWorkers, openConflicts, REASON_SHORT, SEVERITY_RANK } from './selectors'
+import { formatUtc, span, usd } from './format'
 import type { AppState, Mission, Operation, Severity, Worker } from './types'
 
 /*
@@ -40,20 +41,10 @@ export interface Finding {
   reach: Reach
 }
 
-const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
 const emptyReach = (): Reach => ({ workerIds: [], humanIds: [], teamIds: [], missionIds: [], opIds: [], conflictIds: [] })
 const uniq = <T,>(xs: T[]) => [...new Set(xs)]
 
-const utc = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
-export const formatUtc = (iso: string) => `${utc.format(new Date(iso))} UTC`
-
-/** "20h", "2d 3h", used for deadlines and waiting times. */
-export function span(fromIso: string, toIso: string): string {
-  const mins = Math.max(0, Math.round((Date.parse(toIso) - Date.parse(fromIso)) / 60_000))
-  const d = Math.floor(mins / 1440)
-  const h = Math.floor((mins % 1440) / 60)
-  return d > 0 ? `${d}d ${h}h` : `${h}h`
-}
+export { formatUtc, span }
 
 export const isUnavailable = (w: Worker | undefined) => w?.availability?.status === 'out_of_office'
 

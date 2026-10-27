@@ -1,4 +1,5 @@
-import { NavProvider, useNav } from './state/nav'
+import { NavProvider } from './state/nav'
+import { useNav } from './state/navContext'
 import { AppProvider } from './state/store'
 import { AppShell } from './ui/shell/AppShell'
 import { Governance } from './ui/screens/Governance/Governance'

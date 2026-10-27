@@ -1,4 +1,5 @@
 import type { AppState, AuditEvent, EventPayload, Operation, ReasonCode } from './types'
+import { usd } from './format'
 
 /**
  * Audit event creation and rendering.
@@ -37,7 +38,6 @@ export interface EventView {
   lines: string[]
 }
 
-const usd = (n: number) => `$${n.toLocaleString('en-US')}`
 /** Event ids are `ev-<seq>`; people read them as #<seq>. */
 const ref = (id: string) => `#${id.replace('ev-', '')}`
 

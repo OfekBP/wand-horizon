@@ -4,7 +4,6 @@
   gap: var(--s-5);
   align-items: start;
 }
-.lanes--even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 
 .mission {
   display: inline-flex;
@@ -80,18 +79,9 @@
   outline: 1px solid var(--value-estimated-fg);
   outline-offset: -1px;
 }
-.mini__bar--share { background: var(--ink-4); }
 .mini__val { font-variant-numeric: tabular-nums; }
 .mini__val--muted { color: var(--ink-3); }
 
-.scenarios { list-style: none; margin: 0; padding: 0 var(--s-5) var(--s-3); display: grid; }
-.scenario { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: var(--s-3); align-items: center; padding: 12px 0; border-top: 1px solid var(--line); font-size: var(--t-sm); }
-.scenario:first-child { border-top: none; }
-.scenario__mark { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--line-strong); display: grid; place-items: center; color: #fff; }
-.scenario--done .scenario__mark { background: var(--ok); border-color: var(--ok); }
-.scenario--done .scenario__title { color: var(--ink-3); }
-.scenario__title { font-weight: 520; }
-.scenario__hint { font-size: var(--t-xs); color: var(--ink-3); margin-top: 1px; }
 
 .defs { padding: 0 var(--s-5) var(--s-5); display: grid; gap: var(--s-4); font-size: var(--t-sm); color: var(--ink-2); }
 .defs dt { font-weight: 560; color: var(--ink); }
@@ -112,7 +102,7 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 .chev { transition: transform 0.18s var(--ease); color: var(--ink-3); }
 
 @media (max-width: 1000px) {
-  .lanes, .lanes--even { grid-template-columns: minmax(0, 1fr); }
+  .lanes { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 760px) {
   .ledger__row { grid-template-columns: 1fr; gap: var(--s-1); }
@@ -125,29 +115,11 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 
 .card__foot--stack { flex-direction: column; align-items: flex-start; }
 
-/* the Assure lane is the night chapter: the pivot from managing the workforce to proving what it was allowed to do */
-.card.card--night { background: var(--night); border-color: var(--night); color: var(--night-ink); display: flex; flex-direction: column; }
-.card.card--night .card__head p { color: var(--night-ink-2); }
-.card.card--night h2 { color: var(--night-ink); }
-.card.card--night .row-btn { border-top-color: var(--night-line); }
-.card.card--night .row-btn:hover { background: var(--night-2); }
-.card.card--night .row-btn:focus-visible { box-shadow: inset 0 0 0 3px rgba(201, 179, 240, 0.45); }
-.card.card--night .row-btn__title { color: var(--night-ink); }
-.card.card--night .row-btn__detail { color: var(--night-ink-2); }
-.card.card--night .row-btn__detail .seq { color: var(--night-ink-2); }
-.card.card--night .risk-note { color: var(--night-critical); }
-.card.card--night .row-btn__go, .card--night .link { color: var(--night-accent); }
-.card.card--night .card__foot { border-top-color: var(--night-line); color: var(--night-ink-2); }
-.card.card--night .empty { color: var(--night-ink-2); }
-.card.card--night .empty__title { color: var(--night-ink); }
-.card.card--night .badge--accent { background: var(--night-2); border-color: var(--night-line); color: var(--night-accent); }
 
 @media (max-width: 760px) {
   .row-btn__age { display: block; }
 }
 
-.row-btn__seq { margin-top: 2px; }
-.card.card--night .row-btn__seq { color: var(--night-ink-2); }
 
 .rows__label { padding: var(--s-3) var(--s-5) var(--s-2); font-size: 11px; font-weight: 560; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-top: 1px solid var(--line); }
 

@@ -1,4 +1,6 @@
-export const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`
+import { usd } from '../domain/format'
+
+export const money = usd
 
 export function moneyCompact(n: number): string {
   const abs = Math.abs(n)

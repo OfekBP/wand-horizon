@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Worker } from '../../../domain/types'
-import { useApp } from '../../../state/store'
+import { useApp } from '../../../state/appContext'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Overlay } from '../../primitives/Overlay'

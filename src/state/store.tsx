@@ -1,21 +1,10 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createInitialState, personasFor } from '../data/generate'
 import { MINUTE } from '../data/prng'
 import { applyAction, type Action, type Result, type UserAction } from '../domain/reducer'
-import { buildIndex, type Index } from '../domain/selectors'
-import type { Actor, AppState, SimRole } from '../domain/types'
-
-interface Ctx {
-  state: AppState
-  index: Index
-  personas: Record<SimRole, Actor>
-  /** The only way UI changes domain state: a pure transition (applyAction) applied to the latest state. */
-  act: (action: UserAction) => Result
-  setActingAs: (role: SimRole) => void
-  reset: () => void
-}
-
-const AppContext = createContext<Ctx | null>(null)
+import { buildIndex } from '../domain/selectors'
+import type { AppState, SimRole } from '../domain/types'
+import { AppContext } from './appContext'
 
 export function AppProvider({ children, initial }: { children: ReactNode; initial?: AppState }) {
   const [state, setState] = useState<AppState>(() => initial ?? createInitialState())
@@ -48,10 +37,4 @@ export function AppProvider({ children, initial }: { children: ReactNode; initia
 
   const value = useMemo(() => ({ state, index, personas, act, setActingAs, reset }), [state, index, personas, act, setActingAs, reset])
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
-}
-
-export function useApp(): Ctx {
-  const ctx = useContext(AppContext)
-  if (!ctx) throw new Error('useApp must be used inside AppProvider')
-  return ctx
 }

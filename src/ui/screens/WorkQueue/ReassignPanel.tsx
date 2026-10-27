@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import type { Operation } from '../../../domain/types'
-import { useNav } from '../../../state/nav'
-import { useApp } from '../../../state/store'
+import { useNav } from '../../../state/navContext'
+import { useApp } from '../../../state/appContext'
 import { Button } from '../../primitives/Button'
 
 /** Inline in the case drawer: reassigning a pending decision needs no interruption and no separate focus trap. */

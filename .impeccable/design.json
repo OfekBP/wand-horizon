@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-27T00:00:00Z",
-  "title": "Design System: Accord",
+  "title": "Design System: Wand Horizon",
   "extensions": {
     "colorMeta": {
       "accent-violet": { "role": "primary", "displayName": "Ceremonial Violet", "canonical": "#5b3fa8", "tonalRamp": ["#1f1440", "#2f1f66", "#43308a", "#5b3fa8", "#7a62bf", "#9a82d4", "#c9b3f0", "#efeaf9"] },

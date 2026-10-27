@@ -1,6 +1,6 @@
 import { describeEvent } from '../../domain/audit'
 import type { AuditEvent } from '../../domain/types'
-import { useApp } from '../../state/store'
+import { useApp } from '../../state/appContext'
 import { dateTime } from '../format'
 import './audit.css'
 

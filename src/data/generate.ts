@@ -13,6 +13,7 @@ import type {
   Worker,
 } from '../domain/types'
 import { createRng, DAY, HOUR, iso, MINUTE, NOW } from './prng'
+import { usd } from '../domain/format'
 
 /*
  * Deterministic synthetic fixtures: 50 humans, 500 AI workers.
@@ -186,7 +187,6 @@ const TITLE: Record<string, (amount: string, ref: number, vendor: string) => str
   'sanctions:hold:release': (a, r) => `Release sanctions hold on case SC-${r} (${a})`,
 }
 
-const usd = (n: number) => `$${n.toLocaleString('en-US')}`
 const pad = (n: number, width = 3) => String(n).padStart(width, '0')
 const round = (n: number, step: number) => Math.round(n / step) * step
 

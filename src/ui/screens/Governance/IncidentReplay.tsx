@@ -3,7 +3,7 @@ import { describeEvent, narrateEvent, scopeStateText } from '../../../domain/aud
 import { scopeStateAsOf } from '../../../domain/authorize'
 import { SCOPES } from '../../../domain/reducer'
 import type { AuditEvent, Operation, ScopeState } from '../../../domain/types'
-import { useApp } from '../../../state/store'
+import { useApp } from '../../../state/appContext'
 import { dateTime } from '../../format'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
@@ -38,10 +38,12 @@ interface Props {
  */
 export function IncidentReplay({ op, timeline, selectedSeq, onPick }: Props) {
   const { state, index } = useApp()
-  const [playing, setPlaying] = useState(false)
+  const [wantPlay, setPlaying] = useState(false)
 
   const n = timeline.length
   const idx = Math.max(0, timeline.findIndex((e) => e.seq === selectedSeq))
+  // Playback stops by itself on the last event: derived, so no effect has to switch it off.
+  const playing = wantPlay && idx < n - 1
   const current = timeline[idx]
   const nameOf = (id: string) => index.workerById.get(id)?.name ?? id
   const worker = index.workerById.get(op.workerId)
@@ -69,10 +71,6 @@ export function IncidentReplay({ op, timeline, selectedSeq, onPick }: Props) {
 
   useEffect(() => {
     if (!playing) return
-    if (idx >= n - 1) {
-      setPlaying(false)
-      return
-    }
     const t = window.setTimeout(() => onPick(timeline[idx + 1].seq), 1400)
     return () => window.clearTimeout(t)
   }, [playing, idx, n, timeline, onPick])
@@ -90,8 +88,9 @@ export function IncidentReplay({ op, timeline, selectedSeq, onPick }: Props) {
           <Button
             size="sm"
             onClick={() => {
-              if (!playing && idx >= n - 1) onPick(timeline[0].seq)
-              setPlaying((p) => !p)
+              if (playing) return setPlaying(false)
+              if (idx >= n - 1) onPick(timeline[0].seq)
+              setPlaying(true)
             }}
             aria-pressed={playing}
           >

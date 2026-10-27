@@ -271,6 +271,19 @@ Soft but not bubbly. Controls that act (buttons, badges, chips, toast, role sele
 ### Verdict
 - One word at display size, green for allowed, red for denied, then reason, a Then versus Now comparison, and mono evidence chips.
 
+### Start here (the three questions)
+- The System opens on three equal question cards (Is anything stuck? Is the AI spend justified? What was the AI allowed to do?), each with one live number and one primary pill button. Detail sits under a collapsed "More detail" disclosure. A dismissible accent-wash strip points first-time visitors to the demo.
+
+### Workforce map and findings
+- A deterministic organization drawing: team regions, pods of AI dots under the person who owns them, elbow reporting lines through the gaps. Value uses the same solid / hatched / outlined encoding. A ranked findings list drives the camera; the situation panel docks on the right (stacks under the map below 1100px). Red is used only for the critical or high finding being explained.
+
+### Incident replay
+- Three lanes (worker, people, authorization record) with seq-ordered markers, hatched bands where the authority at that point differs from today, a playhead, and a narrated sentence from the record. "Authorized then" sits beside "Permitted now". The event-by-event record lives under a collapsed "Technical record".
+
+### Site surfaces outside the System
+- **Landing, demo player and brand film** use a separate black surface (`landing.css`, `demo.css`, `intro.css`) with the logo's lilac (#b794f4) as the single accent, Geist and the Newsreader italic phrase, pill buttons and hairline borders. They share the logo, the type and the italic-accent idea with the System but not its stone and paper surfaces.
+- The brand film is a canvas animation (a pure function of time) with generated sound; it is an illustration, never product data.
+
 ## Do's and Don'ts
 
 ### Do:
@@ -285,6 +298,6 @@ Soft but not bubbly. Controls that act (buttons, badges, chips, toast, role sele
 ### Don't:
 - **Don't** add or blend verified, estimated and unmeasured value into one number.
 - **Don't** use shadows or colored side stripes to lift cards.
-- **Don't** use night fills beyond the rail, the Assure card and the toast.
+- **Don't** use night fills beyond the rail and the toast (the landing page, demo and brand film are their own black surfaces).
 - **Don't** reintroduce the generic blue-and-white dashboard look or a row of metric cards.
 - **Don't** use Newsreader for body, labels or numbers.

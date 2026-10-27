@@ -33,9 +33,9 @@ export function Intro() {
   const lastT = useRef(0)
   const soundOn = useRef(false)
 
-  const [ended, setEnded] = useState(false)
-  const [sound, setSound] = useState(false)
   const [reduced] = useState(() => typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const [ended, setEnded] = useState(reduced)
+  const [sound, setSound] = useState(false)
 
   const render = useCallback((t: number) => {
     lastT.current = t
@@ -74,7 +74,7 @@ export function Intro() {
   }, [render])
 
   const loop = useCallback(
-    (now: number) => {
+    function frame(now: number) {
       const t = (now - startAt.current) / 1000
       if (t >= DURATION + 1) {
         render(DURATION + 1)
@@ -82,14 +82,14 @@ export function Intro() {
         return
       }
       render(t)
-      raf.current = requestAnimationFrame(loop)
+      raf.current = requestAnimationFrame(frame)
     },
     [render],
   )
 
-  const play = useCallback(() => {
+  /** Starts the film from the top. Touches only refs, so it is safe to call from an effect. */
+  const start = useCallback(() => {
     cancelAnimationFrame(raf.current)
-    setEnded(false)
     startAt.current = performance.now()
     scoreRunning.current = false
     if (soundOn.current) {
@@ -98,6 +98,12 @@ export function Intro() {
     }
     raf.current = requestAnimationFrame(loop)
   }, [loop])
+
+  /** Replay from a click: also clears the end state. */
+  const play = useCallback(() => {
+    setEnded(false)
+    start()
+  }, [start])
 
   useEffect(() => {
     sprites.current = makeSprites()
@@ -110,16 +116,15 @@ export function Intro() {
       render(frozen)
     } else if (reduced) {
       render(DURATION + 1)
-      setEnded(true)
     } else {
-      play()
+      start()
     }
     return () => {
       window.removeEventListener('resize', resize)
       cancelAnimationFrame(raf.current)
       score.current?.stop()
     }
-  }, [play, render, reduced, resize])
+  }, [start, render, reduced, resize])
 
   const toggleSound = () => {
     if (!score.current) score.current = createScore()

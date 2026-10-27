@@ -69,18 +69,17 @@ export function WorkforceMap({ layout, workers, classes, teamNames, overlay, hig
   }, [])
 
   const target = useMemo(() => fit(focus ?? whole, size, coveredPx), [focus, whole, size, coveredPx])
-  const [vb, setVb] = useState<Box>(target)
-  const vbRef = useRef(vb)
+  const [anim, setVb] = useState<Box>(target)
+  const reduced = prefersReducedMotion()
+  const vb = reduced ? target : anim
+  const vbRef = useRef(anim)
   useEffect(() => {
-    vbRef.current = vb
-  }, [vb])
+    vbRef.current = anim
+  }, [anim])
 
   // Camera: ease to the target, or jump when the user prefers reduced motion.
   useEffect(() => {
-    if (prefersReducedMotion()) {
-      setVb(target)
-      return
-    }
+    if (reduced) return
     const from = vbRef.current
     const start = performance.now()
     let raf = 0
@@ -92,7 +91,7 @@ export function WorkforceMap({ layout, workers, classes, teamNames, overlay, hig
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
-  }, [target])
+  }, [target, reduced])
 
   const scale = size.w / vb.w
   const labelPods = scale > 1.45
