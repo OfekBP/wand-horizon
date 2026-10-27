@@ -13,6 +13,7 @@ import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
 import { Card } from '../../primitives/Layout'
 import { PermissionsList } from '../Workforce/PermissionsList'
+import { IncidentReplay } from './IncidentReplay'
 import './governance.css'
 
 const isEval = (e: AuditEvent | undefined): e is AuthorizationEvaluatedEvent => e?.type === 'AuthorizationEvaluated'
@@ -107,7 +108,9 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
           <div>
             <dt>Decision owner</dt>
             <dd>
-              {owner?.name}
+              <button className="link" onClick={() => owner && go('workforce', owner.id)}>
+                {owner?.name}
+              </button>
               <div className="xs muted">{owner?.role}</div>
             </dd>
           </div>
@@ -149,6 +152,11 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
                   {concerns.length} {concerns.length === 1 ? 'concern' : 'concerns'}
                 </span>
               </div>
+              <div className="xs">
+                <button className="link" onClick={() => go('workforce', `op:${op.id}`)}>
+                  See it on the map
+                </button>
+              </div>
             </dd>
           </div>
         </dl>
@@ -181,6 +189,10 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
         <div className="alert alert--error" role="alert">
           {error}
         </div>
+      )}
+
+      {timeline.length >= 3 && (timeline.some((e) => e.type === 'PermissionChanged') || lastEval) && selected && (
+        <IncidentReplay op={op} timeline={timeline} selectedSeq={selected.seq} onPick={setPickedSeq} />
       )}
 
       <div className="gov-grid">

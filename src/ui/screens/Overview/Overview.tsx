@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { findings as deriveFindings } from '../../../domain/findings'
 import { authorityAtRisk, criticalIssues, overviewMetrics, queueCounts, scenarioProgress, teamPerformance, type TeamRow } from '../../../domain/selectors'
 import { useNav } from '../../../state/nav'
 import { useApp } from '../../../state/store'
@@ -18,18 +19,25 @@ export function Overview() {
   const counts = useMemo(() => queueCounts(state), [state])
   const risk = useMemo(() => authorityAtRisk(state), [state])
   const scenarios = useMemo(() => scenarioProgress(state), [state])
+  const found = useMemo(() => deriveFindings(state), [state])
+  // Where a problem has a finding, the map is the best place to understand it; otherwise the queue.
+  const openIssue = (i: { id: string; kind: string }) => {
+    const f = found.find((x) => x.id === `${i.kind === 'blocked' ? 'blocked' : 'conflict'}:${i.id}`)
+    if (f) go('workforce', f.id)
+    else go('queue', i.id)
+  }
 
   const maxValue = Math.max(1, ...teams.flatMap((t) => [t.verifiedValue, t.estimatedValue]))
   const wireWorker = state.workers.find((w) => w.name === 'Payments-Disburse-003')
   const scenarioLink: Record<string, () => void> = {
-    reassign: () => go('queue', 'op-a1'),
-    resolve: () => go('queue', 'c-001'),
+    reassign: () => go('workforce', 'blocked:op-a1'),
+    resolve: () => go('workforce', 'conflict:c-001'),
     permission: () => go('workforce', wireWorker?.id),
     history: () => go('governance', 'op-c1'),
   }
   const scenarioHint: Record<string, string> = {
-    reassign: 'Work Queue · Release settlement batch SB-2291',
-    resolve: 'Work Queue · Intraday liquidity buffer',
+    reassign: 'Workforce map · the blocked settlement batch',
+    resolve: 'Workforce map · two missions fighting over the liquidity buffer',
     permission: 'Workforce · Payments-Disburse-003, then run its wire in Governance',
     history: 'Governance · change the permission again and watch the decision hold',
   }
@@ -99,7 +107,7 @@ export function Overview() {
             <ul className="rows">
               {issues.map((i) => (
                 <li key={i.id}>
-                  <button className="row-btn" onClick={() => go('queue', i.id)} aria-label={`Investigate ${i.title}`}>
+                  <button className="row-btn" onClick={() => openIssue(i)} aria-label={`Investigate ${i.title}`}>
                     <SeverityBadge severity={i.severity} />
                     <span style={{ minWidth: 0 }}>
                       <div className="row-btn__title">{i.title}</div>
@@ -116,9 +124,14 @@ export function Overview() {
           )}
           <div className="card__foot">
             <span>{counts.concerns} performance concerns are also open.</span>
-            <button className="link" onClick={() => go('queue')}>
-              Open the Work Queue
-            </button>
+            <span style={{ display: 'inline-flex', gap: 'var(--s-4)' }}>
+              <button className="link" onClick={() => go('workforce')}>
+                See {found.length} findings on the map
+              </button>
+              <button className="link" onClick={() => go('queue')}>
+                Open the Work Queue
+              </button>
+            </span>
           </div>
         </Card>
 

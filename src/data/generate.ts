@@ -3,6 +3,7 @@ import type {
   Actor,
   AppState,
   Conflict,
+  Mission,
   Operation,
   PerformanceConcern,
   Severity,
@@ -157,7 +158,7 @@ const LEADS: Record<string, { name: string; role: string }> = {
 
 const VENDORS = ['Halden Freight Ltd', 'Brightwater Logistics', 'Corvid Packaging', 'Meridian Facilities', 'Alder & Finch LLP', 'Tessel Cloud Services', 'Orchard Print Group', 'Larkspur Utilities']
 const BLOCK_REASONS = [
-  'Approver out of office with no delegate assigned',
+  'Approver has not picked this up yet',
   'Second approver not yet identified',
   'Awaiting compliance sign-off on the counterparty',
   'Amount exceeds the approver’s delegated authority',
@@ -287,18 +288,58 @@ export function createInitialState(): AppState {
     }
   })
 
+  /* ---------- missions, availability and the simulated prior-period cost ---------- */
+  // A separate generator keeps the rest of the fixtures byte-identical to before these were added.
+  const rng2 = createRng(4417)
+  const verifiedIds = new Set(values.filter((v) => v.basis === 'verified').map((v) => v.workerId))
+  const fnName = (w: Worker) => fnOf.get(w.id)?.name ?? ''
+  const humansOf = (teamId: string) => workers.filter((w) => w.kind === 'human' && w.teamId === teamId)
+  const ownerIn = (teamId: string, nth = 0) => humansOf(teamId).filter((h) => h.id !== leadByTeam.get(teamId))[nth] ?? leadOf(teamId)
+
+  interface MissionSpec { id: string; name: string; objective: string; ownerId: string; take: (assigned: Set<string>) => Worker[] }
+  const byFn = (fns: Array<[string, number?]>) => (assigned: Set<string>) =>
+    fns.flatMap(([f, n]) => ai.filter((w) => fnName(w) === f && !assigned.has(w.id)).slice(0, n ?? 999))
+  const MISSIONS: MissionSpec[] = [
+    { id: 'm-settle', name: 'Settle every custodian batch on time', objective: 'Reconcile and release each settlement batch before the custodian cut-off.', ownerId: human('Elena Park').id, take: byFn([['Settlement-Recon'], ['Cash-Position', 6]]) },
+    { id: 'm-idle', name: 'Minimize idle cash', objective: 'Sweep surplus balances out of the operating account so idle cash stays near zero.', ownerId: ownerIn('t-treasury', 0).id, take: byFn([['Liquidity-Forecast'], ['FX-Hedge-Monitor', 5]]) },
+    { id: 'm-pay', name: 'Pay suppliers early', objective: 'Release approved supplier payments on receipt to capture early-payment terms.', ownerId: human('Priya Raman').id, take: byFn([['Payments-Disburse'], ['Remittance-Match', 8]]) },
+    {
+      id: 'm-claims', name: 'Clear the Q4 claims backlog', objective: 'Triage and route every open claim opened before October.', ownerId: leadOf('t-claims').id,
+      // the scaled-out mission: fourteen workers, none with verified value
+      take: (assigned) => ai.filter((w) => w.teamId === 't-claims' && fnName(w) !== 'Claims-Payout' && !verifiedIds.has(w.id) && !assigned.has(w.id)).slice(0, 14),
+    },
+    { id: 'm-sanctions', name: 'Sanctions review sweep', objective: 'Review and clear every open sanctions alert within two business days.', ownerId: human('Marcus Hale').id, take: byFn([['Sanctions-Review'], ['Alert-Triage', 6]]) },
+    { id: 'm-renewal', name: 'Renewal quoting', objective: 'Issue a priced renewal quote for every policy expiring this quarter.', ownerId: leadOf('t-underwriting').id, take: byFn([['Pricing-Assist'], ['Renewal-Review']]) },
+    { id: 'm-refunds', name: 'Customer refund resolution', objective: 'Resolve refund requests inside one business day.', ownerId: leadOf('t-support').id, take: byFn([['Refund-Issue'], ['Support-Resolve', 10]]) },
+    { id: 'm-books', name: 'Close October books', objective: 'Post approved adjustments and reconcile all accruals by the fifth business day.', ownerId: ownerIn('t-finops', 0).id, take: byFn([['Ledger-Adjust'], ['Accrual-Prep'], ['Close-Checklist', 8]]) },
+    { id: 'm-risk', name: 'Exposure and reserve modeling', objective: 'Keep exposure and loss-reserve models current for month-end.', ownerId: leadOf('t-risk').id, take: byFn([['Reserve-Adjust'], ['Exposure-Model']]) },
+  ]
+  const assigned = new Set<string>()
+  const missions: Mission[] = MISSIONS.map((m) => ({ id: m.id, name: m.name, objective: m.objective, ownerId: m.ownerId }))
+  for (const m of MISSIONS) for (const w of m.take(assigned)) { w.missionId = m.id; assigned.add(w.id) }
+  // Simulated prior-period run cost. Mostly flat; one mission scaled out sharply with no verified value,
+  // and one grew moderately but is verified, so a cost rise alone is never treated as a problem.
+  for (const w of ai) {
+    const factor = w.missionId === 'm-claims' ? rng2.float(0.5, 0.62) : w.missionId === 'm-pay' ? rng2.float(0.82, 0.88) : rng2.float(0.92, 1.08)
+    w.priorMonthlyCost = round(w.monthlyCost * factor, 10)
+  }
+  human('Elena Park').availability = { status: 'out_of_office', until: '2026-10-31T09:00:00.000Z', note: 'On leave. No delegate assigned.' }
+
   /* ---------- conflicts (open at seed; two resolved via scripted actions) ---------- */
-  const mkConflict = (id: string, a: string, b: string, resource: string, summary: string, severity: Severity, agoMs: number): Conflict => ({
-    id, workerAId: aiByName(a).id, workerBId: aiByName(b).id, resource, summary, severity, detectedAt: iso(NOW - agoMs), status: 'open',
+  const mkConflict = (
+    id: string, kind: Conflict['kind'], a: string, b: string, resource: string, summary: string, severity: Severity, agoMs: number, missions?: [string, string],
+  ): Conflict => ({
+    id, kind, workerAId: aiByName(a).id, workerBId: aiByName(b).id, resource, summary, severity, detectedAt: iso(NOW - agoMs), status: 'open',
+    ...(missions ? { missionAId: missions[0], missionBId: missions[1] } : {}),
   })
   const conflicts: Conflict[] = [
-    mkConflict('c-001', 'Payments-Disburse-003', 'Liquidity-Forecast-005', 'Intraday liquidity buffer (USD operating account)', 'Payments-Disburse-003 is releasing funds that Liquidity-Forecast-005 has reserved for the 16:00 settlement window.', 'high', 5 * HOUR),
-    mkConflict('c-002', 'Claims-Intake-012', 'Fraud-Signal-008', 'Claim CL-71130 case file', 'Intake marked the claim “validated” while fraud scoring placed the same claim on hold.', 'high', 9 * HOUR),
-    mkConflict('c-003', 'Ledger-Adjust-006', 'Accrual-Prep-004', 'Accrual account 2150', 'Both workers are posting to the same accrual account for the October close.', 'medium', 1 * DAY + 3 * HOUR),
-    mkConflict('c-004', 'Pricing-Assist-003', 'Renewal-Review-009', 'Renewal quote RQ-5521', 'Pricing revised the premium after Renewal-Review had already issued its recommendation.', 'medium', 2 * DAY),
-    mkConflict('c-005', 'Alert-Triage-007', 'KYC-Refresh-002', 'Customer risk rating, account C-30417', 'Two workers set different risk ratings for the same customer within one hour.', 'low', 3 * DAY),
-    mkConflict('c-006', 'Refund-Issue-004', 'Support-Resolve-010', 'Refund request RF-2209', 'Both workers attempted to action the same refund request.', 'medium', 6 * DAY),
-    mkConflict('c-007', 'Remittance-Match-003', 'Exception-Triage-005', 'Payment batch PB-8841', 'Remittance matching and exception triage both claimed the same payment batch.', 'low', 8 * DAY),
+    mkConflict('c-001', 'contradiction', 'Payments-Disburse-003', 'Liquidity-Forecast-005', 'Intraday liquidity buffer (USD operating account)', 'Payments-Disburse-003 is releasing funds that Liquidity-Forecast-005 has reserved for the 16:00 settlement window.', 'high', 5 * HOUR, ['m-pay', 'm-idle']),
+    mkConflict('c-002', 'contradiction', 'Claims-Intake-012', 'Fraud-Signal-008', 'Claim CL-71130 case file', 'Intake marked the claim “validated” while fraud scoring placed the same claim on hold.', 'high', 9 * HOUR),
+    mkConflict('c-003', 'duplicate', 'Ledger-Adjust-006', 'Accrual-Prep-004', 'Accrual account 2150', 'Both workers are posting to the same accrual account for the October close.', 'medium', 1 * DAY + 3 * HOUR),
+    mkConflict('c-004', 'duplicate', 'Pricing-Assist-003', 'Renewal-Review-009', 'Renewal quote RQ-5521', 'Pricing-Assist and Renewal-Review each drafted a quote for RQ-5521 independently.', 'medium', 2 * DAY),
+    mkConflict('c-005', 'contradiction', 'Alert-Triage-007', 'KYC-Refresh-002', 'Customer risk rating, account C-30417', 'Two workers set different risk ratings for the same customer within one hour.', 'low', 3 * DAY),
+    mkConflict('c-006', 'duplicate', 'Refund-Issue-004', 'Support-Resolve-010', 'Refund request RF-2209', 'Both workers attempted to action the same refund request.', 'medium', 6 * DAY),
+    mkConflict('c-007', 'duplicate', 'Remittance-Match-003', 'Exception-Triage-005', 'Payment batch PB-8841', 'Remittance matching and exception triage both claimed the same payment batch.', 'low', 8 * DAY),
   ]
 
   /* ---------- performance concerns ---------- */
@@ -368,6 +409,8 @@ export function createInitialState(): AppState {
     title: `Release settlement batch SB-2291 (${usd(2_400_000)})`,
     summary: 'Custodian cut-off is in 20 hours. Reconciliation is complete and the batch is ready; only the human release decision is missing.',
     blockReason: `Approver ${elena.name} is out of office with no delegate assigned`,
+    dueAt: iso(NOW + 20 * HOUR),
+    consequence: `Missing the custodian cut-off holds ${usd(2_400_000)} of settlements until the next business day and leaves the October close without its final settlement.`,
   }))
   startOp(mkOp({
     id: 'op-a2', workerId: aiByName('Sanctions-Review-004').id, requiredScope: 'sanctions:hold:release', amount: 64_000, status: 'awaiting_approval',
@@ -375,6 +418,8 @@ export function createInitialState(): AppState {
     title: 'Release sanctions hold on 14 related accounts',
     summary: 'Screening found no match. Customers cannot transact until a reviewer releases the hold.',
     blockReason: 'Second reviewer sign-off has not been assigned',
+    dueAt: iso(NOW + 2 * DAY),
+    consequence: 'Fourteen customer accounts stay frozen until a reviewer releases the hold.',
   }))
   startOp(mkOp({
     id: 'op-a3', workerId: aiByName('Claims-Payout-009').id, requiredScope: 'claims:payout:approve', amount: 118_500, status: 'awaiting_approval',
@@ -382,6 +427,8 @@ export function createInitialState(): AppState {
     title: 'Approve payout for claim CL-77412 (' + usd(118_500) + ')',
     summary: 'Documentation verified. Payout exceeds the approver’s delegated authority.',
     blockReason: 'Amount exceeds the approver’s delegated authority',
+    dueAt: iso(NOW + 1 * DAY),
+    consequence: `The ${usd(118_500)} claim payout is delayed past its service window.`,
   }))
 
   // C: in-progress wire a manager can change permissions around
@@ -502,7 +549,7 @@ export function createInitialState(): AppState {
 
   /* ---------- replay ---------- */
   let state: AppState = {
-    teams, workers, values, operations: [], conflicts, concerns, events: [], nextSeq: 1,
+    teams, workers, missions, values, operations: [], conflicts, concerns, events: [], nextSeq: 1,
     clock: iso(NOW - 41 * DAY), seedClock: iso(NOW), actingAs: { name: dana.name, role: 'executive' },
   }
   const ordered = steps.map((s, i) => ({ ...s, i })).sort((a, b) => a.at - b.at || a.i - b.i)

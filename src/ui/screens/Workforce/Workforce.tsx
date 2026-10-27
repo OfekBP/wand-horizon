@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { findings } from '../../../domain/findings'
 import { classifyAiWorkers, filterWorkers, openConcerns, openConflicts, overviewMetrics, type WorkerFilter } from '../../../domain/selectors'
 import type { Worker } from '../../../domain/types'
 import { useNav } from '../../../state/nav'
@@ -7,19 +8,21 @@ import { money, pct } from '../../format'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
-import { Card, PageHeader } from '../../primitives/Layout'
+import { Card, PageHeader, Tabs } from '../../primitives/Layout'
 import { DataTable, type Column } from '../../primitives/Table'
+import { MapView } from './map/MapView'
 import { WorkerDrawer } from './WorkerDrawer'
 import './workforce.css'
 
 const PAGE = 50
 const initials = (name: string) => name.split(/[\s-]+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase()
 
-export function Workforce() {
+function Registry() {
   const { state, index } = useApp()
-  const { selectedId, go } = useNav()
+  const [openId, setOpenId] = useState<string | null>(null)
   // The 500 AI workers are the registry's bulk, so they lead; people are one click away.
   const [filter, setFilter] = useState<WorkerFilter>({ q: '', kind: 'ai', teamId: 'all', status: 'all', value: 'all' })
+  const [page, setPage] = useState(0)
   const metrics = useMemo(() => overviewMetrics(state), [state])
   const summary = useMemo(() => {
     const ai = state.workers.filter((w) => w.kind === 'ai')
@@ -28,7 +31,6 @@ export function Workforce() {
     const withConcern = new Set(openConcerns(state).map((c) => c.workerId)).size
     return { owners, inConflict, withConcern }
   }, [state])
-  const [page, setPage] = useState(0)
 
   const patch = (p: Partial<WorkerFilter>) => {
     setFilter((f) => ({ ...f, ...p }))
@@ -73,16 +75,20 @@ export function Workforce() {
         )
       },
     },
-    { key: 'status', header: 'Status', render: (w) => <Badge tone={w.status === 'active' ? 'ok' : 'medium'}>{w.status === 'active' ? 'Active' : 'Paused'}</Badge> },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (w) =>
+        w.availability?.status === 'out_of_office' ? <Badge tone="high" dot>Out of office</Badge> : <Badge tone={w.status === 'active' ? 'ok' : 'medium'}>{w.status === 'active' ? 'Active' : 'Paused'}</Badge>,
+    },
     { key: 'cost', header: 'Monthly cost', align: 'right', render: (w) => money(w.monthlyCost) },
   ]
 
-  const selected = selectedId ? index.workerById.get(selectedId) : undefined
+  const opened = openId ? index.workerById.get(openId) : undefined
 
   return (
-    <div className="page">
-      <PageHeader title="Workforce" subtitle={`${state.workers.filter((w) => w.kind === 'human').length} people and ${state.workers.filter((w) => w.kind === 'ai').length} AI workers. Every AI worker has an accountable human owner.`} />
-      <p className="small muted" style={{ marginTop: -8 }}>
+    <>
+      <p className="small muted">
         <strong className="num">{metrics.aiWorkers}</strong> AI workers answer to <strong className="num">{summary.owners}</strong> accountable people ·{' '}
         <strong className="num">{pct(metrics.coverage, 1)}</strong> have verified value · <strong className="num">{summary.inConflict}</strong> are in an open conflict ·{' '}
         <strong className="num">{summary.withConcern}</strong> have an open performance concern.
@@ -123,7 +129,7 @@ export function Workforce() {
             {rows.length} {rows.length === 1 ? 'worker' : 'workers'}
           </span>
         </div>
-        <DataTable label="Workforce" rows={visible} columns={columns} rowKey={(w) => w.id} selectedKey={selectedId} onRowClick={(w) => go('workforce', w.id)} empty="No workers match these filters." />
+        <DataTable label="Workforce registry" rows={visible} columns={columns} rowKey={(w) => w.id} selectedKey={openId} onRowClick={(w) => setOpenId(w.id)} empty="No workers match these filters." />
         {pages > 1 && (
           <div className="pager">
             <span className="num">
@@ -140,8 +146,36 @@ export function Workforce() {
           </div>
         )}
       </Card>
-      {selected && <WorkerDrawer key={selected.id} worker={selected} onClose={() => go('workforce')} />}
-    </div>
+      {opened && <WorkerDrawer key={opened.id} worker={opened} onClose={() => setOpenId(null)} />}
+    </>
   )
 }
 
+export function Workforce() {
+  const { state } = useApp()
+  const { selectedId, go } = useNav()
+  const view = selectedId === 'registry' ? 'registry' : 'map'
+  const open = useMemo(() => findings(state).length, [state])
+  const people = state.workers.filter((w) => w.kind === 'human').length
+  const aiCount = state.workers.filter((w) => w.kind === 'ai').length
+
+  return (
+    <div className="page">
+      <PageHeader
+        title="The whole workforce,"
+        accent="at a glance"
+        subtitle={`${people} people and ${aiCount} AI workers. Every AI worker answers to a person, and every problem on the map is something you can look into and decide.`}
+      />
+      <Tabs
+        label="Workforce views"
+        value={view}
+        onChange={(v) => go('workforce', v === 'registry' ? 'registry' : null)}
+        tabs={[
+          { key: 'map', label: 'Map', count: open },
+          { key: 'registry', label: 'Registry', count: people + aiCount },
+        ]}
+      />
+      {view === 'map' ? <MapView /> : <Registry />}
+    </div>
+  )
+}

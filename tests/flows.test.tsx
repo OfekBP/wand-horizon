@@ -76,7 +76,8 @@ describe('Flows C and D: permission change mid-flight, then reconstruct', () => 
   it('prevents execution after a revocation and shows the denied decision and the permission state it relied on', async () => {
     const user = userEvent.setup()
     await open(`#/workforce/${workerId('Payments-Disburse-003')}`)
-    const drawer = await screen.findByRole('dialog', { name: 'Payments-Disburse-003' })
+    // the map's situation panel docks beside the map instead of opening a drawer
+    const drawer = await screen.findByRole('complementary', { name: 'Situation' })
     expect(within(drawer).getByText(/Active · limit \$500,000/)).toBeInTheDocument()
 
     await user.click(within(drawer).getByRole('button', { name: 'Change permissions' }))
@@ -129,7 +130,8 @@ describe('One product, two missions', () => {
     expect(await screen.findByText('Authority at risk · 1')).toBeInTheDocument()
 
     await goTo(`#/workforce/${workerId('Payments-Disburse-003')}`)
-    const drawer = await screen.findByRole('dialog', { name: 'Payments-Disburse-003' })
+    // the map's situation panel docks beside the map instead of opening a drawer
+    const drawer = await screen.findByRole('complementary', { name: 'Situation' })
     await user.click(within(drawer).getByRole('button', { name: 'Change permissions' }))
     const dialog = await screen.findByRole('dialog', { name: 'Change permissions' })
     await user.click(within(dialog).getByRole('radio', { name: 'Revoke' }))
@@ -164,6 +166,6 @@ describe('One product, two missions', () => {
   it('Governance opens on the cases where authority changed, not on a flat list', async () => {
     await open('#/governance')
     expect(await screen.findByRole('button', { name: /Authority changed/ })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByText(/Wire \$120,000 to Northwind Escrow/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Wire \$120,000 to Northwind Escrow/).length).toBeGreaterThan(0)
   })
 })

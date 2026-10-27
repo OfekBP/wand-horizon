@@ -36,7 +36,7 @@ function WorkerCard({ worker, label }: { worker: Worker; label: string }) {
 
 export function ConflictDrawer({ conflict, onClose }: { conflict: Conflict; onClose: () => void }) {
   const { state, index, act } = useApp()
-  const { notify } = useNav()
+  const { notify, go } = useNav()
   const [winner, setWinner] = useState('')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +68,7 @@ export function ConflictDrawer({ conflict, onClose }: { conflict: Conflict; onCl
       footer={
         open ? (
           <>
+            <Button onClick={() => go('workforce', `conflict:${conflict.id}`)}>Show on the map</Button>
             <Button onClick={onClose}>Cancel</Button>
             <Button variant="primary" type="submit" form="conflict-form" disabled={!winner || !note.trim()}>
               Resolve conflict

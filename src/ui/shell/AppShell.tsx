@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
+import { findings } from '../../domain/findings'
 import { authorityAtRisk, queueCounts } from '../../domain/selectors'
 import type { SimRole } from '../../domain/types'
 import { SCREEN_LABEL, useNav, type Screen } from '../../state/nav'
@@ -20,6 +21,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { screen, go, back, backTo, toast, dismissToast, notify } = useNav()
   const counts = useMemo(() => queueCounts(state), [state])
   const atRisk = useMemo(() => authorityAtRisk(state).length, [state])
+  const openFindings = useMemo(() => findings(state).length, [state])
   const openItems = counts.blocked + counts.conflicts + counts.concerns
 
   const item = (n: NavEntry, count?: number, critical?: boolean, countTitle?: string) => (
@@ -52,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {item({ screen: 'overview', icon: 'overview' })}
           <div className="nav__group">Operate</div>
           {item({ screen: 'queue', icon: 'queue' }, openItems, counts.criticalBlocked > 0, 'Open items in the work queue')}
-          {item({ screen: 'workforce', icon: 'workforce' })}
+          {item({ screen: 'workforce', icon: 'workforce' }, openFindings, false, 'Open findings on the workforce map')}
           <div className="nav__group">Assure</div>
           {item({ screen: 'governance', icon: 'governance' }, atRisk, true, 'In-progress operations that would be denied if run now')}
         </nav>

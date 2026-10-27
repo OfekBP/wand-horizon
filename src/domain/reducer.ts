@@ -32,6 +32,7 @@ export type Action =
   | ({ type: 'ATTEMPT_EXECUTION'; operationId: string } & Meta)
   | ({ type: 'REASSIGN_OWNER'; operationId: string; newOwnerId: string; reason: string } & Meta)
   | ({ type: 'RESOLVE_CONFLICT'; conflictId: string; authoritativeWorkerId: string; note: string } & Meta)
+  | ({ type: 'PAUSE_WORKERS'; workerIds: string[]; reason: string } & Meta)
 
 export type UserAction = Action extends infer A ? (A extends Action ? Omit<A, 'at' | 'actor'> : never) : never
 
@@ -92,6 +93,7 @@ export function applyAction(state: AppState, action: Action): Result {
       if (op.status === 'awaiting_approval')
         return fail('This operation is awaiting a human decision and cannot be executed. Only in_progress operations can run.')
       if (op.status !== 'in_progress') return fail('This operation has already reached a final outcome.')
+      if (state.workers.find((w) => w.id === op.workerId)?.status === 'paused') return fail('The executing worker is paused, so this operation cannot run.')
 
       // Authorization is evaluated at execution time against everything logged before this moment.
       const cutoffSeq = state.nextSeq - 1
@@ -133,6 +135,8 @@ export function applyAction(state: AppState, action: Action): Result {
       const newOwner = state.workers.find((w) => w.id === action.newOwnerId)
       if (!newOwner || newOwner.kind !== 'human') return fail('The new decision owner must be a human.')
       if (newOwner.id === op.decisionOwnerId) return fail('Choose a different owner.')
+      if (newOwner.availability?.status === 'out_of_office')
+        return fail(`${newOwner.name} is out of office${newOwner.availability.until ? ` until ${newOwner.availability.until.slice(0, 10)}` : ''}. Choose someone who can take the decision.`)
       if (!action.reason.trim()) return fail('A reason is required.')
       const { state: next } = append(
         state,
@@ -149,6 +153,9 @@ export function applyAction(state: AppState, action: Action): Result {
         },
       }
     }
+
+    case 'PAUSE_WORKERS':
+      return pauseWorkers(state, action, meta)
 
     case 'RESOLVE_CONFLICT': {
       const conflict = state.conflicts.find((c) => c.id === action.conflictId)
@@ -191,6 +198,18 @@ export function applyAction(state: AppState, action: Action): Result {
     }
 
   }
+}
+
+/** Pausing is a leadership control: it stops spend on workers and is recorded as one audit event. */
+function pauseWorkers(state: AppState, action: Extract<Action, { type: 'PAUSE_WORKERS' }>, meta: Meta): Result {
+  const ids = [...new Set(action.workerIds)]
+  if (ids.length === 0) return fail('Choose at least one worker to pause.')
+  if (!action.reason.trim()) return fail('A reason is required.')
+  const targets = ids.map((id) => state.workers.find((w) => w.id === id))
+  if (targets.some((w) => !w || w.kind !== 'ai')) return fail('Only AI workers can be paused.')
+  if (targets.some((w) => w!.status !== 'active')) return fail('Every worker must be active to be paused.')
+  const { state: next } = appendEvent(state, meta, {}, { type: 'WorkersPaused', workerIds: ids, reason: action.reason.trim() })
+  return { ok: true, state: { ...next, workers: next.workers.map((w) => (ids.includes(w.id) ? { ...w, status: 'paused' as const } : w)) } }
 }
 
 function currentScope(state: AppState, workerId: string, scope: string) {

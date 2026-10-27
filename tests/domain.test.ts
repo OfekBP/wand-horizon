@@ -18,6 +18,7 @@ const op = (over: Partial<Operation> = {}): Operation => ({
 const base = (): AppState => ({
   teams: [{ id: 't', name: 'T' }],
   workers: [worker('ai-1', 'ai'), worker('h-1', 'human'), worker('h-2', 'human')],
+  missions: [],
   values: [], operations: [], conflicts: [], concerns: [], events: [], nextSeq: 1, clock: at(0), seedClock: at(0),
   actingAs: { name: 'Exec', role: 'executive' },
 })
@@ -162,7 +163,7 @@ describe('resolving a conflict (flow B)', () => {
   const withConflict = (): AppState => ({
     ...base(),
     workers: [...base().workers, worker('ai-2', 'ai')],
-    conflicts: [{ id: 'c-1', workerAId: 'ai-1', workerBId: 'ai-2', resource: 'r', summary: 's', severity: 'high', detectedAt: at(0), status: 'open' }],
+    conflicts: [{ id: 'c-1', kind: 'duplicate', workerAId: 'ai-1', workerBId: 'ai-2', resource: 'r', summary: 's', severity: 'high', detectedAt: at(0), status: 'open' }],
   })
   it('resolves once, records the authoritative worker, and leaves operation statuses alone', () => {
     const s0 = run(withConflict(), start())

@@ -1,4 +1,4 @@
-import type { AppState, AuditEvent, EventPayload, ReasonCode } from './types'
+import type { AppState, AuditEvent, EventPayload, Operation, ReasonCode } from './types'
 
 /**
  * Audit event creation and rendering.
@@ -83,6 +83,12 @@ export function describeEvent(e: AuditEvent, nameOf: (id: string) => string): Ev
           `Evaluated against permission events up to #${e.cutoffSeq}`,
         ],
       }
+    case 'WorkersPaused':
+      return {
+        title: `${e.workerIds.length} AI ${e.workerIds.length === 1 ? 'worker' : 'workers'} paused`,
+        tone: 'accent',
+        lines: [e.workerIds.slice(0, 4).map(nameOf).join(', ') + (e.workerIds.length > 4 ? ` and ${e.workerIds.length - 4} more` : ''), `Reason: ${e.reason}`],
+      }
     case 'OperationExecuted':
       return { title: 'Operation executed', tone: 'ok', lines: [`Authorized by decision ${ref(e.evaluationEventId)}`] }
     case 'ExecutionPrevented':
@@ -123,4 +129,35 @@ export function evidenceSummary(i: EvidenceSummaryInput): string {
     `Recorded after this decision: ${list(i.changedSince)}${i.changedSince.length ? '. These do not alter the stored decision.' : ''}`,
     `Same request today would be: ${i.todayDecision}`,
   ].join('\n')
+}
+
+export interface NarrationContext {
+  nameOf: (id: string) => string
+  op: Operation
+  scopeLabel: string
+}
+
+/** One plain sentence for the incident replay. Built only from what was recorded. */
+export function narrateEvent(e: AuditEvent, c: NarrationContext): string {
+  const worker = c.nameOf(e.workerId ?? c.op.workerId)
+  switch (e.type) {
+    case 'PermissionChanged': {
+      const verb = e.action === 'grant' ? 'granted' : e.action === 'modify' ? 'changed the limit on' : 'revoked'
+      const limit = e.action === 'revoke' ? '' : e.limit !== undefined ? `, limit ${usd(e.limit)}` : ', no limit'
+      return `${e.actor} ${verb} ${worker}'s authority to ${c.scopeLabel.toLowerCase()}${limit}. Reason: ${e.reason}.`
+    }
+    case 'OperationStarted':
+      return `${worker} started "${c.op.title}" for ${usd(c.op.amount)}. ${c.nameOf(e.ownerId)} was accountable for the decision.`
+    case 'AuthorizationEvaluated':
+      return `${worker} tried to execute "${c.op.title}". Looking only at permission events up to #${e.cutoffSeq}, its authority was: ${scopeStateText(e.scopeState, e.evidenceChangeIds.length > 0).toLowerCase()}. Result: ${e.decision === 'allowed' ? 'allowed' : 'denied'}, because ${REASON_LABEL[e.reasonCode].toLowerCase()}.`
+    case 'OperationExecuted':
+      return `The action ran. Authorization had been valid when it was checked, and that record does not change.`
+    case 'ExecutionPrevented':
+      return `The action did not run. ${REASON_LABEL[e.reasonCode]} when it was checked, and that record does not change.`
+    case 'OwnerReassigned':
+      return `${e.actor} moved the pending decision from ${c.nameOf(e.fromOwnerId)} to ${c.nameOf(e.toOwnerId)}. Reason: ${e.reason}.`
+    case 'ConflictResolved':
+    case 'WorkersPaused':
+      return describeEvent(e, c.nameOf).title
+  }
 }

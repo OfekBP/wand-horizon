@@ -13,10 +13,13 @@ import { DataTable, type Column } from '../../primitives/Table'
 import { EventDrawer } from './EventDrawer'
 import { OperationDetail } from './OperationDetail'
 import './governance.css'
+import './replay.css'
 import '../Workforce/workforce.css'
 
 type View = 'cases' | 'log'
 const PAGE = 50
+/** The seeded story that walks through the whole scenario: authority changed mid-flight, then attempted. */
+const FEATURED_INCIDENT = 'op-d1'
 const WINDOW_DAYS = 30
 
 const TYPE_LABEL: Record<AuditEvent['type'], string> = {
@@ -27,6 +30,7 @@ const TYPE_LABEL: Record<AuditEvent['type'], string> = {
   AuthorizationEvaluated: 'Authorization evaluated',
   OperationExecuted: 'Operation executed',
   ExecutionPrevented: 'Execution prevented',
+  WorkersPaused: 'Workers paused',
 }
 
 const SEGMENTS: Array<{ key: CaseSegment; label: string; help: string }> = [
@@ -67,6 +71,7 @@ export function Governance() {
   const [logPage, setLogPage] = useState(0)
 
   const nameOf = (id: string) => index.workerById.get(id)?.name ?? id
+  const featured = index.opById.get(FEATURED_INCIDENT)
 
   /* resolve the deep link: an operation id, or an event id (which may belong to an operation) */
   const linkedEvent = selectedId?.startsWith('ev-') ? state.events.find((e) => e.id === selectedId) : undefined
@@ -145,7 +150,7 @@ export function Governance() {
     { key: 'amount', header: 'Amount', align: 'right', render: (r) => money(r.op.amount) },
     {
       key: 'last',
-      header: 'Last event (UTC)',
+      header: 'Last event',
       align: 'right',
       render: (r) => {
         const seq = lastSeq.get(r.op.id)
@@ -190,6 +195,20 @@ export function Governance() {
         accent="authorized to do?"
         subtitle="Every case keeps the decision stored at execution time, the permission events it relied on, and a replay check. The log is append-only: new events are added, existing ones never change."
       />
+
+      {featured && (
+        <div className="featured">
+          <div>
+            <strong>Featured incident: {featured.title}</strong>
+            <p>
+              {nameOf(featured.workerId)} was authorized to do this, its authority changed while the work was in progress, and then it was attempted. Replay what it was allowed to do at each step, who was accountable, and how that differs from today.
+            </p>
+          </div>
+          <Button variant="primary" onClick={() => go('governance', featured.id)}>
+            Replay the incident
+          </Button>
+        </div>
+      )}
 
       <Card flush>
         <div className="stats" aria-label={`Last ${WINDOW_DAYS} days`}>

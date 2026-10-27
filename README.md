@@ -1,4 +1,4 @@
-# Workforce Command
+# Accord
 
 A desktop-first prototype for managing a hybrid workforce of 50 people and 500 AI workers. It answers two questions:
 
@@ -22,15 +22,36 @@ npm run build    # typecheck + production build
 
 Use **Reset demo** (bottom of the sidebar) to restore the original data. State is in memory only, so a refresh also resets it.
 
-## The four flows to try
+## Seeing the company: the Workforce Map
+
+The Workforce screen opens on a map of the whole organization (the registry table is the other tab). The executive sits at the top with reporting lines to the head of each team. Each team is a region, and each person who owns AI workers is a **pod**: the person with their accountable AI workers as dots. AI workers use the product's value encoding: solid = verified, hatched = estimated, outlined = unmeasured.
+
+**Findings drive the map.** A ranked list ("What the map found") is derived from live data. Selecting one zooms the map to the cluster, switches to the lens that explains it, and opens a situation panel with *why it matters*, *how we got here* (a clickable cause chain), and *decide* (a real action). Resolving it writes an audit event, changes the underlying data, and the finding, the drawing and the Work Queue all update. Nothing is a UI-only flag.
+
+| Finding | What the evaluator sees | Action |
+| --- | --- | --- |
+| Blocked decision | *Release settlement batch SB-2291* ($2.4M) is blocked because its decision owner, Elena Park, is out of office with no delegate, and the custodian cut-off is in 20 hours | Move the decision to an available person. The operation stays *awaiting approval*; the finding clears; an owner-change event is logged. A person who is also out of office is refused. |
+| Conflicting objectives | Two missions (*Pay suppliers early* and *Minimize idle cash*) fight over one liquidity buffer | Choose the authoritative worker; the conflict closes everywhere |
+| Duplicated work | Two workers independently doing the same work | Choose which keeps it |
+| Cost without verified value | *Clear the Q4 claims backlog*: 14 workers whose **simulated** cost rose 74% with none verified | Pause the workers. The modeled run-rate falls, they are drawn as paused, one event is logged |
+| Authority at risk | An in-flight operation that would be denied if it ran now | Restore the permission, or open the evidence |
+
+Lenses (Ownership, Value and cost, Conflicts, Blocked, Authority, Missions) change what the map emphasizes. Every screen links in and out: the Overview, the Work Queue drawer and the Governance case page all open the same situation on the map, with a Back link.
+
+**About the cost comparison.** There is no time series and none is invented. Each AI worker has a *simulated* previous-30-day run cost from the same cost model as its current cost. The comparison is always labeled simulated, is never presented as a measurement, and is never used for a return or savings claim.
+
+## Proving what was authorized: the Incident replay
+
+Open any Governance case with authority history (start with the **Featured incident**, *Wire $120,000 to Northwind Escrow*). The replay shows three lanes in order of record, not to time scale: the AI worker, the people who changed things, and the stored authorization record. Move the playhead (or press Play) and the page rebuilds, from the stored events, what the worker was **authorized to do then**, beside what is **permitted now**. Hatched bands mark where the authority at that point differs from today. A sentence narrates each step from the record, and the accountability strip shows who recorded it, the worker's owner, the decision owner at that point, and who last set the authority. The stored decision never changes as the playhead moves.
+
+## Other flows to try
 
 | Flow | Where | What to do |
 | --- | --- | --- |
-| A. Reassign a blocked decision | Work Queue → open *Release settlement batch SB-2291* | **Reassign decision**, pick a person, give a reason. The owner changes, the status stays *Awaiting approval*, and an audit event is recorded. |
-| B. Resolve a conflict | Work Queue → *Conflicts* → *Intraday liquidity buffer* | Choose the authoritative worker and write a note. The conflict leaves the open list and a `ConflictResolved` event is recorded. |
-| C. Change permissions mid-flight | Workforce → *Payments-Disburse-003* → **Change permissions** | Revoke the wire permission (or lower the limit below $480,000). Then open Governance → *Wire $480,000 to Halden Freight* → **Run execution step**. Execution is prevented. Without the change it is allowed. |
-| D. Reconstruct history | Governance → any operation; try *Wire $120,000 to Northwind Escrow*, *Wire $75,000 to Kestrel Logistics*, *Approve payout for claim CL-68801* | Select events in the sequence. The right panel rebuilds the permission state as of that event and shows the stored decision, its evidence, and a replay check. |
-
+| Reassign a blocked decision | Map → the blocked finding (or Work Queue → *SB-2291*) | Move the decision to an available person |
+| Resolve a conflict | Map → a conflict finding (or Work Queue → Conflicts) | Choose the authoritative worker and write a note |
+| Change permissions mid-flight | Map → *Payments-Disburse-003* → **Change permissions** | Revoke the wire permission (or lower the limit below $480,000), then Governance → *Wire $480,000 to Halden Freight* → **Run execution step**. Execution is prevented; without the change it is allowed |
+| Reconstruct history | Governance → *Replay the incident* | Scrub the replay; also try *Wire $75,000 to Kestrel Logistics* (executed, revoked afterwards) and *Approve payout for claim CL-68801* (limit lowered) |
 Use the **Acting as** selector to record actions as an Executive, Manager or Investigator. It is simulated: it only sets the actor name in audit events and is not authentication or authorization.
 
 ## Architecture
@@ -42,7 +63,9 @@ src/
     authorize.ts   permissionsAsOf(), authorize(), replayMatches()
     audit.ts       appendEvent() (the only place events are created) and event rendering text
     reducer.ts     applyAction(): the single pure state-transition function
-    selectors.ts   metrics, queues, timelines (all UI numbers are derived here)
+    selectors.ts   metrics, queues, case rows, authority at risk, then-vs-now, scenario progress
+    findings.ts    the ranked findings, their cause chains and reach (derived, never stored)
+    orgLayout.ts   deterministic organization layout for the map (pods, regions, reporting lines)
   data/      seeded PRNG and fixtures; history is produced by replaying actions through the real reducer
   state/     store.tsx (state + act()), nav.tsx (hash-based navigation, toast)
   ui/        shell, primitives, audit timeline, and one folder per screen
@@ -67,7 +90,8 @@ Policy: **authorization must be valid when a consequential action executes. Revo
 
 `in_progress`, `awaiting_approval`, `executed`, `prevented`. "Blocked" is derived: an operation is blocked exactly when it is `awaiting_approval`.
 
-- Reassigning a decision changes the owner only; the status stays `awaiting_approval`.
+- Reassigning a decision changes the owner only; the status stays `awaiting_approval`. The new owner must be available (out-of-office people are refused).
+- Pausing AI workers is a leadership control recorded as one `WorkersPaused` event; paused workers are not active (they leave coverage and the run-rate) and cannot execute.
 - Only `in_progress` operations can be executed. The UI hides the action for other statuses and the reducer rejects it.
 - The prototype does not simulate the human approval step; it shows permission changes ahead of an execution attempt.
 
@@ -95,6 +119,9 @@ No return on investment, savings or profit is calculated anywhere.
 | Hash-based navigation | Deep links and refresh work with no router dependency. |
 | In-memory state with Reset demo | Impossible to get stuck in a corrupted state; trade-off is losing changes on refresh. |
 | Hand-built CSS with design tokens | Full control of the visual language and a tiny bundle. Colour is reserved for meaning: accent for interaction and verified value, red and amber for severity only. |
+| Findings are derived, never stored | A finding disappears because the data stopped matching it (a decision moved, a conflict closed), so the map, the list and the queue cannot disagree. |
+| Deterministic pod layout, not a force graph | 550 nodes in a force simulation is a hairball and changes every load. Pods make ownership the shape of the picture and keep the layout testable. |
+| Cost rise shown only as a labeled simulated comparison | There is no time series, so none is invented; the comparison never leaves the finding and is never used for a return claim. |
 | Verified = solid, estimated = hatched, unmeasured = outlined | The distinction survives every chart, badge and legend and works without relying on colour alone. |
 
 ## Known limitations
@@ -102,4 +129,7 @@ No return on investment, savings or profit is calculated anywhere.
 - Single-user simulation. The acting-as selector is not access control.
 - No approval workflow, no real execution, no persistence.
 - Performance concerns are read-only (investigate and open the worker profile; no acknowledge action).
+- The map shows 550 nodes at overview scale where labels are small; use the findings list, a lens, or zoom (select a team or finding) to read it. Individual AI dots are mouse-targets only; the registry and findings list are the keyboard and screen-reader equivalents.
+- Missions, availability and the previous-period cost are synthetic fixtures written for the demo.
+- The incident replay orders events by sequence, not to time scale, by design.
 - Authorization scopes are exact strings with a single amount limit per scope.

@@ -412,8 +412,8 @@
 .empty p { max-width: 46ch; }
 
 /* ---------- shared detail primitives (drawers, tables, forms) ---------- */
-.cell-title { font-weight: 540; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cell-sub { font-size: var(--t-xs); color: var(--ink-3); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell-title { font-weight: 540; max-width: 310px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell-sub { font-size: var(--t-xs); color: var(--ink-3); max-width: 310px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .section-label { font-size: var(--t-xs); font-weight: 560; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
 .choices { display: grid; gap: var(--s-2); }
 

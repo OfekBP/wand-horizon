@@ -80,7 +80,8 @@ export function overviewMetrics(state: AppState): Metrics {
     estimatedOnlyWorkers: count('estimatedOnly'),
     verifiedWorkers,
     coverage: activeAi === 0 ? 0 : verifiedWorkers / activeAi,
-    aiCost: sum(aiWorkers.map((w) => w.monthlyCost)),
+    // paused workers stop incurring run cost, so the run-rate counts active workers only
+    aiCost: sum(aiWorkers.filter((w) => w.status === 'active').map((w) => w.monthlyCost)),
     humanCost: sum(state.workers.filter((w) => w.kind === 'human').map((w) => w.monthlyCost)),
   }
 }
@@ -114,7 +115,7 @@ export function teamPerformance(state: AppState): TeamRow[] {
       aiWorkers: aiMembers.length,
       verifiedValue: sum(state.values.filter((v) => v.basis === 'verified' && ids.has(v.workerId)).map((v) => v.amount)),
       estimatedValue: sum(state.values.filter((v) => v.basis === 'estimated' && ids.has(v.workerId)).map((v) => v.amount)),
-      aiCost: sum(aiMembers.map((w) => w.monthlyCost)),
+      aiCost: sum(aiMembers.filter((w) => w.status === 'active').map((w) => w.monthlyCost)),
       coverage: active.length === 0 ? 0 : active.filter((w) => classes.get(w.id) === 'verified').length / active.length,
       openIssues:
         blocked.filter((o) => teamOf(o.workerId) === team.id).length +

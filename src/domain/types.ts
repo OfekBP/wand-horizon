@@ -29,6 +29,27 @@ export interface Worker {
   responsibilities: string[]
   /** Synthetic monthly cost in USD. AI: modeled run cost. Human: loaded labor cost. */
   monthlyCost: number
+  /** AI only. SIMULATED run cost for the previous 30 days, from the same cost model. Never a measurement. */
+  priorMonthlyCost?: number
+  /** AI only. The mission this worker is currently assigned to, if any. */
+  missionId?: string
+  /** People only. Whether this person can currently take decisions. */
+  availability?: Availability
+}
+
+export interface Availability {
+  status: 'available' | 'out_of_office'
+  /** ISO time they are back. */
+  until?: string
+  note?: string
+}
+
+/** A mission groups AI workers, across teams, behind one objective and one accountable human. */
+export interface Mission {
+  id: string
+  name: string
+  objective: string
+  ownerId: string
 }
 
 /** Value attaches to AI workers only. An AI worker with no records is "unmeasured". */
@@ -56,6 +77,10 @@ export interface Operation {
   startedAt: string
   awaitingSince?: string
   blockReason?: string
+  /** When the work must be done by, if there is a hard deadline. */
+  dueAt?: string
+  /** What happens to the business if it is not done. Synthetic, written for the demo. */
+  consequence?: string
 }
 
 export interface ConflictResolution {
@@ -65,8 +90,15 @@ export interface ConflictResolution {
   resolvedAt: string
 }
 
+/** duplicate: two workers do the same work. contradiction: two workers pursue opposing outcomes. */
+export type ConflictKind = 'duplicate' | 'contradiction'
+
 export interface Conflict {
   id: string
+  kind: ConflictKind
+  /** Set when the two workers belong to missions with opposing objectives. */
+  missionAId?: string
+  missionBId?: string
   workerAId: string
   workerBId: string
   resource: string
@@ -152,7 +184,14 @@ export interface ExecutionPreventedPayload {
   reasonCode: ReasonCode
 }
 
+export interface WorkersPausedPayload {
+  type: 'WorkersPaused'
+  workerIds: string[]
+  reason: string
+}
+
 export type EventPayload =
+  | WorkersPausedPayload
   | OperationStartedPayload
   | OwnerReassignedPayload
   | ConflictResolvedPayload
@@ -173,6 +212,7 @@ export interface Actor {
 export interface AppState {
   teams: Team[]
   workers: Worker[]
+  missions: Mission[]
   values: ValueRecord[]
   operations: Operation[]
   conflicts: Conflict[]

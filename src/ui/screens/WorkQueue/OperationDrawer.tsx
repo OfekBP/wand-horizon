@@ -37,6 +37,7 @@ export function OperationDrawer({ op, onClose }: { op: Operation; onClose: () =>
       onClose={onClose}
       footer={
         <>
+          <Button onClick={() => go('workforce', `op:${op.id}`)}>Show on the map</Button>
           <Button onClick={() => go('governance', op.id)}>Open the evidence</Button>
           {waiting && !reassigning && (
             <Button variant="primary" onClick={() => setReassigning(true)}>
