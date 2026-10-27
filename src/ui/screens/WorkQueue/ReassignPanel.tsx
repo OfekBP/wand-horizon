@@ -35,11 +35,11 @@ export function ReassignPanel({ op, onDone }: { op: Operation; onDone: () => voi
     <form className="inline-form" onSubmit={submit} aria-label="Reassign pending decision">
       <h3>Reassign pending decision</h3>
       <p className="xs muted">
-        Only the decision owner changes. The operation stays <strong>awaiting approval</strong>, and the change is recorded in the audit log. Currently with{' '}
+        Only the approver changes. The operation stays <strong>awaiting approval</strong>, and the change is recorded in the audit log. Currently with{' '}
         <strong>{current?.name}</strong>.
       </p>
       <div className="field">
-        <label htmlFor="new-owner">New decision owner</label>
+        <label htmlFor="new-owner">New approver</label>
         <select id="new-owner" className="select" value={ownerId} onChange={(e) => setOwnerId(e.target.value)} data-autofocus>
           <option value="">Select a person</option>
           {groups.map((g) => (

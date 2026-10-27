@@ -49,6 +49,10 @@ The script lives in `src/ui/demo/script.ts`; to change the walkthrough edit the 
 
 Use **Reset demo** (bottom of the sidebar) to restore the original data. State is in memory only, so a refresh also resets it.
 
+## Where to start
+
+The System opens on **Start here** with three plain questions: *Is anything stuck?*, *Is the AI spend justified?* and *What was the AI allowed to do?* Each has a live number and one button into the matching story; everything else (the full list, value, cost, teams) is under "More detail". The four screens are named for the question they answer: **Start here**, **Needs attention** (the work queue), **Org map** (the workforce map and registry) and **AI accountability** (the audit cases and incident replay). The org map opens on the most urgent issue the first time it is visited in a session, and a case page puts the incident replay first with the event-by-event record under "Technical record".
+
 ## Seeing the company: the Workforce Map
 
 The Workforce screen opens on a map of the whole organization (the registry table is the other tab). The executive sits at the top with reporting lines to the head of each team. Each team is a region, and each person who owns AI workers is a **pod**: the person with their accountable AI workers as dots. AI workers use the product's value encoding: solid = verified, hatched = estimated, outlined = unmeasured.

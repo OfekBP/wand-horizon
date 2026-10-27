@@ -42,6 +42,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
   const conflicts = openConflicts(state).filter((c) => c.workerAId === op.workerId || c.workerBId === op.workerId)
   const concerns = state.concerns.filter((c) => c.workerId === op.workerId && c.status === 'open')
 
+  const showReplay = timeline.length >= 3 && (timeline.some((e) => e.type === 'PermissionChanged') || !!lastEval)
   const cutoff = isEval(selected) ? selected.cutoffSeq : selected?.seq ?? state.nextSeq - 1
   const live = scopeStateAsOf(state.events, op.workerId, op.requiredScope, state.nextSeq - 1)
   const verdict = isEval(selected) ? thenVsNow(state, selected) : null
@@ -108,7 +109,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
             </dd>
           </div>
           <div>
-            <dt>Decision owner</dt>
+            <dt>Approver</dt>
             <dd>
               <button className="link" onClick={() => owner && go('workforce', owner.id)}>
                 {owner?.name}
@@ -198,10 +199,15 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
 
       {editing && worker && <PermissionDialog worker={worker} initialScope={op.requiredScope} onClose={() => setEditing(false)} />}
 
-      {timeline.length >= 3 && (timeline.some((e) => e.type === 'PermissionChanged') || lastEval) && selected && (
-        <IncidentReplay op={op} timeline={timeline} selectedSeq={selected.seq} onPick={setPickedSeq} />
-      )}
+      {showReplay && selected && <IncidentReplay op={op} timeline={timeline} selectedSeq={selected.seq} onPick={setPickedSeq} />}
 
+      <details className="card tech" open={!showReplay}>
+        <summary>
+          Technical record: events, the decision and the permissions it used
+          <span className="chev">
+            <Icon name="chevron" size={16} />
+          </span>
+        </summary>
       <div className="gov-grid">
         <Card title="What was recorded" subtitle="In order of record. Select an event to rebuild the permission state at that point." flush>
           <div style={{ padding: 'var(--s-2) var(--s-4) var(--s-4)' }}>
@@ -269,7 +275,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
 
                 <div className="verdict__proof">
                   <div>
-                    <div className="section-label">Evidence relied on</div>
+                    <div className="section-label">Records this decision used</div>
                     {selected.evidenceChangeIds.length === 0 ? (
                       <div className="xs muted">No permission event exists for this scope.</div>
                     ) : (
@@ -286,7 +292,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
                     )}
                   </div>
                   <div>
-                    <div className="section-label">Replay check</div>
+                    <div className="section-label">Re-check from the record</div>
                     {replayOk ? (
                       <Badge tone="ok" dot>
                         Verified
@@ -327,6 +333,7 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
           </Card>
         </div>
       </div>
+      </details>
     </div>
   )
 }

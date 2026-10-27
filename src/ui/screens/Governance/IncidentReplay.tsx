@@ -198,7 +198,7 @@ export function IncidentReplay({ op, timeline, selectedSeq, onPick }: Props) {
             <dd>{nameOf(worker?.ownerId ?? '')}</dd>
           </div>
           <div>
-            <dt>Decision owner</dt>
+            <dt>Approver</dt>
             <dd>{nameOf(decisionOwnerAt)}</dd>
           </div>
           <div>

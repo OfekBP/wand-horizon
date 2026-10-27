@@ -4,10 +4,10 @@ export type Screen = 'overview' | 'queue' | 'workforce' | 'governance'
 const SCREENS: Screen[] = ['overview', 'queue', 'workforce', 'governance']
 
 export const SCREEN_LABEL: Record<Screen, string> = {
-  overview: 'Overview',
-  queue: 'Work Queue',
-  workforce: 'Workforce',
-  governance: 'Governance',
+  overview: 'Start here',
+  queue: 'Needs attention',
+  workforce: 'Org map',
+  governance: 'AI accountability',
 }
 
 interface Toast {

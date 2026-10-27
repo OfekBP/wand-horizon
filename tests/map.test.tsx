@@ -22,6 +22,19 @@ const panel = () => screen.findByRole('complementary', { name: 'Situation' })
 const findingButton = (re: RegExp) => screen.findByRole('button', { name: re })
 
 describe('Workforce map: see, understand, decide', () => {
+  it('opens on the most urgent issue the first time, and not again in the same session', async () => {
+    const view = await open('#/workforce')
+    expect(await within(await panel()).findByText(/is blocked because Elena Park is unavailable/)).toBeInTheDocument()
+    view.unmount()
+    await act(async () => {
+      window.location.hash = '#/workforce'
+      await new Promise((r) => setTimeout(r, 0))
+    })
+    await open('#/workforce')
+    expect(await screen.findByRole('group', { name: /Workforce map: 50 people and 500 AI workers/ })).toBeInTheDocument()
+    expect(screen.queryByRole('complementary', { name: 'Situation' })).not.toBeInTheDocument()
+  })
+
   it('opens on the map with ranked findings, and keeps the registry as the alternative', async () => {
     const user = userEvent.setup()
     await open('#/workforce')
@@ -138,7 +151,7 @@ describe('The map is connected to the rest of the product', () => {
     await user.click(await screen.findByRole('button', { name: /Investigate Release settlement batch SB-2291/ }))
     const p = within(await panel())
     expect(p.getByText(/Missing the custodian cut-off holds \$2,400,000/)).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Back to Overview' }))
+    await user.click(screen.getByRole('button', { name: 'Back to Start here' }))
     expect(await screen.findByText(/How the workforce is/)).toBeInTheDocument()
   })
 

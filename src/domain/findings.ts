@@ -271,5 +271,5 @@ export const FINDING_LABEL: Record<FindingKind, string> = {
   'conflicting-objectives': 'Conflicting objectives',
   'duplicate-work': 'Duplicated work',
   'cost-without-proof': 'Cost without verified value',
-  'authority-at-risk': 'Authority at risk',
+  'authority-at-risk': 'Permission changed',
 }

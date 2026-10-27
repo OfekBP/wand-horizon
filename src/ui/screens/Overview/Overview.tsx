@@ -1,12 +1,14 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { findings as deriveFindings } from '../../../domain/findings'
-import { authorityAtRisk, criticalIssues, overviewMetrics, queueCounts, scenarioProgress, teamPerformance, type TeamRow } from '../../../domain/selectors'
+import { authorityAtRisk, criticalIssues, overviewMetrics, queueCounts, teamPerformance, type TeamRow } from '../../../domain/selectors'
 import { useNav } from '../../../state/nav'
 import { useApp } from '../../../state/store'
 import { age, dateTime, money, pct } from '../../format'
-import { Badge, SeverityBadge } from '../../primitives/Badge'
+import { SeverityBadge } from '../../primitives/Badge'
+import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
 import { Card, PageHeader } from '../../primitives/Layout'
+import { FEATURED_INCIDENT } from '../Governance/Governance'
 import { DataTable, type Column } from '../../primitives/Table'
 import './overview.css'
 
@@ -18,9 +20,7 @@ export function Overview() {
   const issues = useMemo(() => criticalIssues(state, 3), [state])
   const counts = useMemo(() => queueCounts(state), [state])
   const risk = useMemo(() => authorityAtRisk(state), [state])
-  const scenarios = useMemo(() => scenarioProgress(state), [state])
   const found = useMemo(() => deriveFindings(state), [state])
-  const spend = useMemo(() => found.filter((f) => f.kind === 'cost-without-proof'), [found])
   // Where a problem has a finding, the map is the best place to understand it; otherwise the queue.
   const openIssue = (i: { id: string; kind: string }) => {
     const f = found.find((x) => x.id === `${i.kind === 'blocked' ? 'blocked' : 'conflict'}:${i.id}`)
@@ -29,18 +29,23 @@ export function Overview() {
   }
 
   const maxValue = Math.max(1, ...teams.flatMap((t) => [t.verifiedValue, t.estimatedValue]))
-  const wireWorker = state.workers.find((w) => w.name === 'Payments-Disburse-003')
-  const scenarioLink: Record<string, () => void> = {
-    reassign: () => go('workforce', 'blocked:op-a1'),
-    resolve: () => go('workforce', 'conflict:c-001'),
-    permission: () => go('workforce', wireWorker?.id),
-    history: () => go('governance', 'op-c1'),
-  }
-  const scenarioHint: Record<string, string> = {
-    reassign: 'Workforce map · the blocked settlement batch',
-    resolve: 'Workforce map · two missions fighting over the liquidity buffer',
-    permission: 'Workforce · Payments-Disburse-003, then run its wire in Governance',
-    history: 'Governance · change the permission again and watch the decision hold',
+  const blockedTop = found.find((f) => f.kind === 'blocked-decision')
+  const spend = found.filter((f) => f.kind === 'cost-without-proof')
+  const dismissKey = 'wh-firstrun-dismissed'
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem(dismissKey) === '1'
+    } catch {
+      return false
+    }
+  })
+  const dismiss = () => {
+    setDismissed(true)
+    try {
+      window.localStorage.setItem(dismissKey, '1')
+    } catch {
+      // storage can be unavailable; the strip simply comes back next visit
+    }
   }
 
   const teamColumns: Column<TeamRow>[] = [
@@ -60,27 +65,7 @@ export function Overview() {
         </div>
       ),
     },
-    {
-      key: 'estimated',
-      header: 'Estimated value',
-      sort: (a, b) => a.estimatedValue - b.estimatedValue,
-      render: (r) => (
-        <div className="mini">
-          <span className="mini__track">
-            <span className="mini__bar mini__bar--estimated" style={{ width: `${(r.estimatedValue / maxValue) * 100}%` }} />
-          </span>
-          <span className="mini__val mini__val--muted">{money(r.estimatedValue)}</span>
-        </div>
-      ),
-    },
     { key: 'cost', header: 'AI operating cost', align: 'right', sort: (a, b) => a.aiCost - b.aiCost, render: (r) => money(r.aiCost) },
-    {
-      key: 'coverage',
-      header: 'Workers with verified value',
-      align: 'right',
-      sort: (a, b) => a.coverage - b.coverage,
-      render: (r) => pct(r.coverage),
-    },
     { key: 'issues', header: 'Open issues', align: 'right', sort: (a, b) => a.openIssues - b.openIssues, render: (r) => (r.openIssues > 0 ? <span className="strong">{r.openIssues}</span> : <span className="muted">0</span>) },
   ]
 
@@ -89,14 +74,85 @@ export function Overview() {
       <PageHeader
         title="How the workforce is"
         accent="running"
-        subtitle={`${m.humans} people and ${m.aiWorkers} AI workers, trailing 30 days, as of ${dateTime(state.clock)}. Decide what is blocked here, then check in Governance what each AI worker was authorized to do.`}
+        subtitle={`Wand Horizon shows how a company of ${m.humans} people and ${m.aiWorkers} AI workers is running, what is stuck, and what each AI worker was allowed to do. Start with one of the three questions below. Data is synthetic, trailing 30 days, as of ${dateTime(state.clock)}.`}
       />
 
-      <div className="lanes">
+      {!dismissed && (
+        <div className="firstrun" role="note">
+          <span>
+            New here? <a href="#/demo">Watch the 90-second demo</a>, or follow the three questions below.
+          </span>
+          <button className="link" onClick={dismiss}>
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      <div className="asks">
+        <section className="ask" aria-labelledby="ask-stuck">
+          <h2 id="ask-stuck">Is anything stuck?</h2>
+          <p className="ask__stat">
+            <strong className="num">{counts.blocked}</strong> operations wait on a person ({counts.criticalBlocked} critical), and {counts.conflicts} conflicts between workers are open.
+          </p>
+          <p className="ask__text">{blockedTop ? `${blockedTop.title}. ${blockedTop.consequence}` : 'Nothing is blocked by an unavailable person right now.'}</p>
+          <Button variant="primary" onClick={() => go('workforce', blockedTop?.id)}>
+            {blockedTop ? 'Investigate the most urgent' : 'Open the org map'}
+          </Button>
+        </section>
+
+        <section className="ask" aria-labelledby="ask-spend">
+          <h2 id="ask-spend">Is the AI spend justified?</h2>
+          <p className="ask__stat">
+            <strong className="num">{pct(m.coverage, 0)}</strong> of AI workers have verified value ({m.verifiedWorkers} of {m.activeAi}).
+          </p>
+          <p className="ask__text">{spend[0] ? `${spend[0].title}. ${spend[0].consequence}` : 'No mission shows rising cost without verified value right now.'}</p>
+          <Button variant="primary" onClick={() => go('workforce', spend[0]?.id)}>
+            {spend[0] ? 'Review the spend' : 'Open the org map'}
+          </Button>
+        </section>
+
+        <section className="ask" aria-labelledby="ask-allowed">
+          <h2 id="ask-allowed">What was the AI allowed to do?</h2>
+          <p className="ask__stat">What matters is the permission an AI worker had at the moment it acted, even if that permission changed after the work began.</p>
+          <p className="ask__label">{`Permission changed after work started · ${risk.length}`}</p>
+          {risk.length === 0 ? (
+            <p className="ask__text">No in-flight operation would be denied right now.</p>
+          ) : (
+            <ul className="rows ask__rows">
+              {risk.slice(0, 2).map((r) => (
+                <li key={r.op.id}>
+                  <button className="row-btn row-btn--risk" onClick={() => go('governance', r.op.id)} aria-label={`Open the evidence for ${r.op.title}`}>
+                    <span style={{ minWidth: 0 }}>
+                      <div className="row-btn__title">{r.op.title}</div>
+                      <div className="row-btn__detail">
+                        <span className="risk-note">{r.authorityNote}</span> · {money(r.op.amount)}
+                      </div>
+                    </span>
+                    <span className="row-btn__go">
+                      Evidence <Icon name="arrow" size={12} style={{ verticalAlign: -1 }} />
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Button variant="primary" onClick={() => go('governance', FEATURED_INCIDENT)}>
+            Replay a past incident
+          </Button>
+        </section>
+      </div>
+
+      <details className="more">
+        <summary>
+          More detail: everything that needs a decision, value, cost and teams
+          <span className="chev">
+            <Icon name="chevron" size={16} />
+          </span>
+        </summary>
+        <div className="more__body">
         <Card
           title="Needs a decision"
           subtitle={`${counts.blocked} blocked operations (${counts.criticalBlocked} critical) and ${counts.conflicts} open conflicts. Most severe and longest waiting first.`}
-          actions={<Badge tone="accent">Operate</Badge>}
           flush
         >
           {issues.length === 0 ? (
@@ -157,52 +213,6 @@ export function Overview() {
             </span>
           </div>
         </Card>
-
-        <Card
-          title={`Authority at risk · ${risk.length}`}
-          subtitle="In-progress operations that would be denied if they ran right now. Derived from today's permissions, not a recorded decision."
-          actions={<Badge tone="accent">Assure</Badge>}
-          flush
-          className="card--night"
-        >
-          {risk.length === 0 ? (
-            <div className="empty">
-              <span className="empty__title">Nothing in flight would be denied</span>
-              <p>Revoke a permission or lower a limit while an operation is in progress and it appears here, with the evidence behind it.</p>
-              <button className="link" onClick={() => go('workforce', wireWorker?.id)}>
-                Try it on Payments-Disburse-003
-              </button>
-            </div>
-          ) : (
-            <ul className="rows">
-              {risk.slice(0, 3).map((r) => (
-                <li key={r.op.id}>
-                  <button className="row-btn row-btn--risk" onClick={() => go('governance', r.op.id)} aria-label={`Open the evidence for ${r.op.title}`}>
-                    <span style={{ minWidth: 0 }}>
-                      <div className="row-btn__title">{r.op.title}</div>
-                      <div className="row-btn__detail">
-                        <span className="risk-note">{r.authorityNote}</span> · {money(r.op.amount)}
-                      </div>
-                      {r.changedDuringCase.length > 0 && (
-                        <div className="seq row-btn__seq">permission changed at #{r.changedDuringCase[r.changedDuringCase.length - 1].seq}</div>
-                      )}
-                    </span>
-                    <span className="row-btn__go">
-                      Evidence <Icon name="arrow" size={12} style={{ verticalAlign: -1 }} />
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="card__foot card__foot--stack">
-            <span>Nothing here has been decided yet. A decision is stored when the operation runs.</span>
-            <button className="link" onClick={() => go('governance')}>
-              Open Governance
-            </button>
-          </div>
-        </Card>
-      </div>
 
       <div className="lanes">
         <Card title="Value" subtitle="Trailing 30 days. Three kinds of value are reported separately and are never added together." flush>
@@ -283,30 +293,6 @@ export function Overview() {
               </div>
             </dl>
           </Card>
-
-          <Card title="Try the scenarios" subtitle="Each one ticks off from real events in the audit log." flush>
-            <ul className="scenarios">
-              {scenarios.map((s) => (
-                <li key={s.key} className={`scenario${s.done ? ' scenario--done' : ''}`}>
-                  <span className="scenario__mark" aria-hidden="true">
-                    {s.done && <Icon name="check" size={13} />}
-                  </span>
-                  <span>
-                    <div className="scenario__title">
-                      {s.title}
-                      {s.done && <span className="sr-only"> (done)</span>}
-                    </div>
-                    <div className="scenario__hint">{scenarioHint[s.key]}</div>
-                  </span>
-                  {!s.done && (
-                    <button className="link" onClick={scenarioLink[s.key]}>
-                      Start
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Card>
         </div>
       </div>
 
@@ -346,7 +332,7 @@ export function Overview() {
             <dd>Modeled monthly inference and tooling cost for AI workers, and synthetic loaded monthly cost for people. Reported separately. No return, savings or profit is calculated.</dd>
           </div>
           <div>
-            <dt>Authority at risk</dt>
+            <dt>Permission changed after work started</dt>
             <dd>
               In-progress operations that today's permissions would deny if they ran now. It is a live reading, never a stored decision. A decision is recorded only when an operation
               runs, and that stored decision is never recomputed.
@@ -357,6 +343,8 @@ export function Overview() {
             <dd>An operation awaiting a human approval decision. Ranked by severity, then by how long it has waited.</dd>
           </div>
         </dl>
+      </details>
+        </div>
       </details>
     </div>
   )

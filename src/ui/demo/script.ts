@@ -77,32 +77,32 @@ export const SCENES: Scene[] = [
   },
   {
     id: 'overview',
-    label: 'Executive overview',
-    summary: 'Value, cost and what needs a decision, with verified, estimated and unmeasured value kept apart.',
+    label: 'Start here',
+    summary: 'Three plain questions lead into what is stuck, whether the spend is justified, and what the AI was allowed to do.',
     seconds: 11,
     async run(c) {
       c.card(null)
-      c.caption({ step: 'See', title: 'The executive overview', body: 'What is blocked, ranked by severity, beside value that is verified, estimated or unmeasured. Never blended.' })
+      c.caption({ step: 'See', title: 'Start with three questions', body: 'Is anything stuck? Is the AI spend justified? What was the AI allowed to do? Verified, estimated and unmeasured value are never blended.' })
       c.showCursor(true)
-      await c.point(await c.find(heading(/Needs a decision/)), 0.2, 0.5)
+      await c.point(await c.find(heading(/^Is anything stuck\?$/)), 0.3, 0.5)
       await c.wait(1800)
-      await c.point(await c.find((d) => d.querySelector<HTMLElement>('.card--night')), 0.3, 0.2)
-      await c.wait(1500)
-      await c.point(await c.find(heading(/^Value$/)), 0.1, 0.5)
+      await c.point(await c.find(heading(/^Is the AI spend justified\?$/)), 0.3, 0.5)
       await c.wait(1800)
-      c.caption({ step: 'See', title: 'From a number to the cause', body: 'Every row opens the situation behind it on the workforce map.' })
-      await c.click(await c.find((d) => byText(d, 'a, button', /findings on the map/i)))
+      await c.point(await c.find(heading(/^What was the AI allowed to do\?$/)), 0.3, 0.5)
+      await c.wait(1800)
+      c.caption({ step: 'See', title: 'From a question to the cause', body: 'Each answer opens the situation behind it on the org map.' })
+      await c.click(await c.find((d) => byText(d, 'button', /^Investigate the most urgent$/)))
     },
   },
   {
     id: 'conflict',
     label: 'A conflict on the map',
-    summary: 'The workforce map draws ownership and finds two missions working against each other.',
+    summary: 'The org map draws ownership and finds two missions working against each other.',
     seconds: 11,
     async run(c) {
-      c.go('#/workforce')
+      if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
       await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
-      c.caption({ step: 'Understand', title: 'The workforce map', body: 'Each person owns a pod of AI workers. Findings are derived from live data, never stored.' })
+      c.caption({ step: 'Understand', title: 'The org map', body: 'Each person owns a pod of AI workers. Findings are derived from live data, never stored.' })
       c.showCursor(true)
       await c.point(await c.find((d) => d.querySelector<HTMLElement>('.mapview__stage')), 0.5, 0.45)
       await c.wait(2200)

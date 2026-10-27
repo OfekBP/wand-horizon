@@ -19,7 +19,7 @@ import '../Workforce/workforce.css'
 type View = 'cases' | 'log'
 const PAGE = 50
 /** The seeded story that walks through the whole scenario: authority changed mid-flight, then attempted. */
-const FEATURED_INCIDENT = 'op-d1'
+export const FEATURED_INCIDENT = 'op-d1'
 const WINDOW_DAYS = 30
 
 const TYPE_LABEL: Record<AuditEvent['type'], string> = {
@@ -146,7 +146,7 @@ export function Governance() {
       },
     },
     { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.op.status} /> },
-    { key: 'owner', header: 'Decision owner', render: (r) => nameOf(r.op.decisionOwnerId) },
+    { key: 'owner', header: 'Approver', render: (r) => nameOf(r.op.decisionOwnerId) },
     { key: 'amount', header: 'Amount', align: 'right', render: (r) => money(r.op.amount) },
     {
       key: 'last',

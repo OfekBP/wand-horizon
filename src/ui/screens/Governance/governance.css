@@ -74,3 +74,8 @@
 .standing .chips { margin-top: 0; }
 
 .policy__actions { display: flex; flex: none; flex-wrap: wrap; gap: var(--s-2); }
+
+details.tech > summary { cursor: pointer; list-style: none; padding: var(--s-4) var(--s-5); font-weight: 560; display: flex; justify-content: space-between; align-items: center; }
+details.tech > summary::-webkit-details-marker { display: none; }
+details.tech[open] > summary .chev { transform: rotate(180deg); }
+details.tech > .gov-grid { padding: 0 var(--s-5) var(--s-5); }

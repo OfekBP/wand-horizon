@@ -31,7 +31,7 @@ describe('Flow A: reassign a pending human decision', () => {
     await user.click(within(drawer).getByRole('button', { name: 'Reassign decision' }))
     // inline in the drawer: no modal for a task that needs no interruption
     const form = await within(drawer).findByRole('form', { name: 'Reassign pending decision' })
-    await user.selectOptions(within(form).getByLabelText('New decision owner'), workerId('Ingrid Novak'))
+    await user.selectOptions(within(form).getByLabelText('New approver'), workerId('Ingrid Novak'))
     await user.type(within(form).getByLabelText('Reason'), 'Elena is out of office')
     await user.click(within(form).getByRole('button', { name: 'Confirm reassignment' }))
 
@@ -148,10 +148,10 @@ describe('One-page mid-flight story and the cost row', () => {
 })
 
 describe('One product, two missions', () => {
-  it('Overview shows authority at risk and moves when a permission is revoked mid-flight', async () => {
+  it('Overview shows permissions changed after work started and moves when a permission is revoked mid-flight', async () => {
     const user = userEvent.setup()
     await open('#/overview')
-    expect(await screen.findByText('Authority at risk · 1')).toBeInTheDocument()
+    expect(await screen.findByText('Permission changed after work started · 1')).toBeInTheDocument()
 
     await goTo(`#/workforce/${workerId('Payments-Disburse-003')}`)
     // the map's situation panel docks beside the map instead of opening a drawer
@@ -163,7 +163,7 @@ describe('One product, two missions', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Revoke' }))
 
     await goTo('#/overview')
-    expect(await screen.findByText('Authority at risk · 2')).toBeInTheDocument()
+    expect(await screen.findByText('Permission changed after work started · 2')).toBeInTheDocument()
   })
 
   it('a case keeps its thread: from the Overview into evidence and back', async () => {
@@ -171,20 +171,27 @@ describe('One product, two missions', () => {
     await open('#/overview')
     await user.click(await screen.findByRole('button', { name: /Open the evidence for Post ledger adjustment ADJ-4417/ }))
     expect(await screen.findByRole('heading', { name: /ADJ-4417/ })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Back to Overview' }))
-    expect(await screen.findByText('Authority at risk · 1')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Back to Start here' }))
+    expect(await screen.findByText('Permission changed after work started · 1')).toBeInTheDocument()
   })
 
-  it('scenarios tick from real events', async () => {
+  it('opens on three plain questions that lead into both missions', async () => {
     const user = userEvent.setup()
-    await open('#/queue/c-001')
-    const drawer = await screen.findByRole('dialog', { name: /Intraday liquidity buffer/ })
-    await user.click(within(drawer).getByRole('radio', { name: /Liquidity-Forecast-005/ }))
-    await user.type(within(drawer).getByLabelText('Resolution note'), 'Liquidity owns the buffer')
-    await user.click(within(drawer).getByRole('button', { name: 'Resolve conflict' }))
-    await goTo('#/overview')
-    expect(await screen.findByText(/Resolve a conflict/)).toBeInTheDocument()
-    expect(screen.getByText('(done)')).toBeInTheDocument()
+    await open('#/overview')
+    expect(await screen.findByRole('heading', { name: 'Is anything stuck?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Is the AI spend justified?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'What was the AI allowed to do?' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Replay a past incident' }))
+    expect(await screen.findByText('Incident replay')).toBeInTheDocument()
+  })
+
+  it('the first-run strip can be dismissed and stays dismissed', async () => {
+    const user = userEvent.setup()
+    await open('#/overview')
+    expect(await screen.findByText(/New here\?/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }))
+    expect(screen.queryByText(/New here\?/)).not.toBeInTheDocument()
+    expect(window.localStorage.getItem('wh-firstrun-dismissed')).toBe('1')
   })
 
   it('Governance opens on the cases where authority changed, not on a flat list', async () => {

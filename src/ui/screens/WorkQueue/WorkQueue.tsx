@@ -62,7 +62,7 @@ export function WorkQueue() {
         </>
       ),
     },
-    { key: 'owner', header: 'Decision owner', render: (o) => name(o.decisionOwnerId) },
+    { key: 'owner', header: 'Approver', render: (o) => name(o.decisionOwnerId) },
     { key: 'wait', header: 'Waiting', align: 'right', render: (o) => age(o.awaitingSince ?? o.startedAt, state.clock) },
     { key: 'amount', header: 'Amount', align: 'right', render: (o) => money(o.amount) },
     { key: 'seq', header: 'Last event', align: 'right', render: (o) => <span className="seq">#{lastSeq.get(o.id) ?? ''}</span> },
@@ -108,7 +108,7 @@ export function WorkQueue() {
 
   return (
     <div className="page">
-      <PageHeader title="Work Queue" subtitle="Operations waiting on a human decision, conflicts between workers, and performance concerns. Most severe first." />
+      <PageHeader title="Needs attention" subtitle="Use this to see every operation waiting on a person, every conflict between workers, and every performance concern, most severe first. Click a row to act on it." />
 
       <Card flush>
         <div style={{ padding: '0 var(--s-5)' }}>

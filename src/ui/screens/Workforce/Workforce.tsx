@@ -164,7 +164,7 @@ export function Workforce() {
       <PageHeader
         title="The whole workforce,"
         accent="at a glance"
-        subtitle={`${people} people and ${aiCount} AI workers. Every AI worker answers to a person, and every problem on the map is something you can look into and decide.`}
+        subtitle={`Use this to see who owns what: ${people} people and ${aiCount} AI workers, with every AI worker shown under the person accountable for it. Problems are listed on the left; pick one to see why it matters and decide.`}
       />
       <Tabs
         label="Workforce views"

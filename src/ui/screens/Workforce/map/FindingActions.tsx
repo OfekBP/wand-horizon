@@ -62,7 +62,7 @@ function BlockedActions({ finding, onResolved }: Props) {
     <form className="decide" onSubmit={submit} aria-label="Reassign the blocked decision">
       <div className="field">
         <span className="field__label">Who can take this decision?</span>
-        <div className="choices" role="radiogroup" aria-label="New decision owner">
+        <div className="choices" role="radiogroup" aria-label="New approver">
           {delegates.map((d) => (
             <label className="choice" key={d.id}>
               <input type="radio" name="delegate" value={d.id} checked={to === d.id} onChange={() => setTo(d.id)} />

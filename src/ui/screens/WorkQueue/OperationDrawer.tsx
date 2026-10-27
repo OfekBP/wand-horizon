@@ -58,7 +58,7 @@ export function OperationDrawer({ op, onClose }: { op: Operation; onClose: () =>
 
       <dl className="facts">
         <div>
-          <dt>Decision owner</dt>
+          <dt>Approver</dt>
           <dd>
             {owner?.name}
             <div className="xs muted">{owner?.role}</div>
@@ -89,7 +89,6 @@ export function OperationDrawer({ op, onClose }: { op: Operation; onClose: () =>
       <section className="authority" aria-label="Authority">
         <div className="authority__head">
           <span className="section-label">Authority</span>
-          <Badge tone="accent">Assure</Badge>
         </div>
         <div className="authority__body">
           <div>

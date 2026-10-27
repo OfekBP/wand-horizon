@@ -150,3 +150,23 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 .card.card--night .row-btn__seq { color: var(--night-ink-2); }
 
 .rows__label { padding: var(--s-3) var(--s-5) var(--s-2); font-size: 11px; font-weight: 560; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); border-top: 1px solid var(--line); }
+
+/* start here: three questions */
+.firstrun { display: flex; justify-content: space-between; align-items: center; gap: var(--s-4); padding: var(--s-3) var(--s-5); margin-bottom: var(--s-5); background: var(--accent-wash); border: 1px solid var(--accent-line); border-radius: var(--r-md); font-size: var(--t-sm); }
+.firstrun a { font-weight: 560; }
+.asks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-5); margin-bottom: var(--s-6); align-items: stretch; }
+.ask { display: flex; flex-direction: column; gap: var(--s-3); padding: var(--s-5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.ask h2 { font-size: var(--t-xl); font-weight: 520; letter-spacing: -0.02em; }
+.ask__stat { font-size: var(--t-sm); color: var(--ink-2); line-height: 1.5; }
+.ask__stat strong { font-size: var(--t-2xl); font-weight: 500; color: var(--ink); margin-right: 4px; letter-spacing: -0.03em; }
+.ask__text { font-size: var(--t-sm); color: var(--ink); line-height: 1.5; }
+.ask__label { font-size: 11px; font-weight: 560; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); }
+.ask__rows .row-btn { padding: 10px 0; }
+.ask .btn { margin-top: auto; align-self: flex-start; }
+.more { margin-bottom: var(--s-5); }
+.more > summary { cursor: pointer; list-style: none; padding: var(--s-3) var(--s-5); font-weight: 560; display: flex; justify-content: space-between; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.more > summary::-webkit-details-marker { display: none; }
+.more > summary:focus-visible { box-shadow: var(--ring); }
+.more[open] > summary .chev { transform: rotate(180deg); }
+.more__body { display: grid; gap: var(--s-5); margin-top: var(--s-5); }
+@media (max-width: 1100px) { .asks { grid-template-columns: minmax(0, 1fr); } }

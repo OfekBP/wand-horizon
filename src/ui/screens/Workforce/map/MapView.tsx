@@ -71,6 +71,19 @@ export function MapView() {
   const help = LENSES.find((l) => l.key === lens)!.help
 
   const select = (id: string | null) => (id ? go('workforce', id) : go('workforce'))
+
+  // First visit in a session: open on the most urgent issue so the map starts with a story, not a blank canvas.
+  useEffect(() => {
+    if (selectedId || all.length === 0 || document.documentElement.dataset.embed) return
+    try {
+      if (window.sessionStorage.getItem('wh-map-opened') === '1') return
+      window.sessionStorage.setItem('wh-map-opened', '1')
+    } catch {
+      return
+    }
+    go('workforce', all[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const close = () => {
     setResolution(null)
     go('workforce')

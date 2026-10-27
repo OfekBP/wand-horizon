@@ -54,10 +54,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         <nav className="nav" aria-label="Primary">
           {item({ screen: 'overview', icon: 'overview' })}
-          <div className="nav__group">Operate</div>
           {item({ screen: 'queue', icon: 'queue' }, openItems, counts.criticalBlocked > 0, 'Open items in the work queue')}
           {item({ screen: 'workforce', icon: 'workforce' }, openFindings, false, 'Open findings on the workforce map')}
-          <div className="nav__group">Assure</div>
           {item({ screen: 'governance', icon: 'governance' }, atRisk, true, 'In-progress operations that would be denied if run now')}
         </nav>
 
@@ -96,9 +94,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <a className="topbar__link" href={DEMO_HASH}>
             Demo
           </a>
-          <div className="who" title="Simulated role. Sets the actor recorded in audit events. Not authentication or authorization.">
+          <div className="who" title="Demo role. Sets who is recorded in the audit log when you act. It is not a login and grants nothing.">
             <span>
-              <span className="who__prefix">Simulated · </span>
+              <span className="who__prefix">Demo role · </span>
               <span className="who__name">{state.actingAs.name}</span>
             </span>
             <select aria-label="Acting as (simulated role)" value={state.actingAs.role} onChange={(e) => setActingAs(e.target.value as SimRole)}>
