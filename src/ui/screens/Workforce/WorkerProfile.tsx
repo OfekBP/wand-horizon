@@ -8,6 +8,7 @@ import { money } from '../../format'
 import { Badge, StatusBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { PermissionsList } from './PermissionsList'
+import { TERMS } from '../../terms'
 
 /** One worker, in full. Shared by the registry drawer and the map's situation panel. */
 export function WorkerProfile({ worker, onChangePermissions }: { worker: Worker; onChangePermissions?: () => void }) {
@@ -107,7 +108,7 @@ export function WorkerProfile({ worker, onChangePermissions }: { worker: Worker;
             {onChangePermissions && (
               <div style={{ marginTop: 10 }}>
                 <Button size="sm" onClick={onChangePermissions}>
-                  Change permissions
+                  {TERMS.changePermissions}
                 </Button>
               </div>
             )}

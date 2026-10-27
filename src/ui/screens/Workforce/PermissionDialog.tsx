@@ -7,6 +7,7 @@ import { useApp } from '../../../state/appContext'
 import { Button } from '../../primitives/Button'
 import { Overlay } from '../../primitives/Overlay'
 import { money } from '../../format'
+import { TERMS } from '../../terms'
 
 export function PermissionDialog({ worker, initialScope, onClose }: { worker: Worker; initialScope?: string; onClose: () => void }) {
   const { state, act } = useApp()
@@ -34,12 +35,12 @@ export function PermissionDialog({ worker, initialScope, onClose }: { worker: Wo
     onClose()
   }
 
-  const LABEL: Record<PermissionAction, string> = { grant: 'Grant', modify: 'Change limit', revoke: 'Revoke' }
+  const LABEL: Record<PermissionAction, string> = { grant: 'Grant', modify: 'Change limit', revoke: TERMS.revoke }
 
   return (
     <Overlay
       variant="dialog"
-      title="Change permissions"
+      title={TERMS.changePermissions}
       subtitle={worker.name}
       onClose={onClose}
       footer={

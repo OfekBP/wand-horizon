@@ -13,6 +13,7 @@ import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
 import { Card } from '../../primitives/Layout'
 import { PermissionDialog } from '../Workforce/PermissionDialog'
+import { TERMS } from '../../terms'
 import { PermissionsList } from '../Workforce/PermissionsList'
 import { IncidentReplay } from './IncidentReplay'
 import './governance.css'
@@ -175,9 +176,9 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
             </div>
           </div>
           <div className="policy__actions">
-            {worker && <Button onClick={() => setEditing(true)}>Change permissions</Button>}
+            {worker && <Button onClick={() => setEditing(true)}>{TERMS.changePermissions}</Button>}
             <Button variant="primary" onClick={run}>
-              Run execution step
+              {TERMS.runStep}
             </Button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
 import { Card, PageHeader } from '../../primitives/Layout'
 import { FEATURED_INCIDENT } from '../Governance/Governance'
+import { TERMS } from '../../terms'
 import { DataTable, type Column } from '../../primitives/Table'
 import './overview.css'
 
@@ -90,29 +91,29 @@ export function Overview() {
 
       <div className="asks">
         <section className="ask" aria-labelledby="ask-stuck">
-          <h2 id="ask-stuck">Is anything stuck?</h2>
+          <h2 id="ask-stuck">{TERMS.askStuck}</h2>
           <p className="ask__stat">
             <strong className="num">{counts.blocked}</strong> operations wait on a person ({counts.criticalBlocked} critical), and {counts.conflicts} conflicts between workers are open.
           </p>
           <p className="ask__text">{blockedTop ? `${blockedTop.title}. ${blockedTop.consequence}` : 'Nothing is blocked by an unavailable person right now.'}</p>
           <Button variant="primary" onClick={() => go('workforce', blockedTop?.id)}>
-            {blockedTop ? 'Investigate the most urgent' : 'Open the org map'}
+            {blockedTop ? TERMS.investigateUrgent : 'Open the org map'}
           </Button>
         </section>
 
         <section className="ask" aria-labelledby="ask-spend">
-          <h2 id="ask-spend">Is the AI spend justified?</h2>
+          <h2 id="ask-spend">{TERMS.askSpend}</h2>
           <p className="ask__stat">
             <strong className="num">{pct(m.coverage, 0)}</strong> of AI workers have verified value ({m.verifiedWorkers} of {m.activeAi}).
           </p>
           <p className="ask__text">{spend[0] ? `${spend[0].title}. ${spend[0].consequence}` : 'No mission shows rising cost without verified value right now.'}</p>
           <Button variant="primary" onClick={() => go('workforce', spend[0]?.id)}>
-            {spend[0] ? 'Review the spend' : 'Open the org map'}
+            {spend[0] ? TERMS.reviewSpend : 'Open the org map'}
           </Button>
         </section>
 
         <section className="ask" aria-labelledby="ask-allowed">
-          <h2 id="ask-allowed">What was the AI allowed to do?</h2>
+          <h2 id="ask-allowed">{TERMS.askAllowed}</h2>
           <p className="ask__stat">What matters is the permission an AI worker had at the moment it acted, even if that permission changed after the work began.</p>
           <p className="ask__label">{`Permission changed after work started · ${risk.length}`}</p>
           {risk.length === 0 ? (
@@ -137,7 +138,7 @@ export function Overview() {
             </ul>
           )}
           <Button variant="primary" onClick={() => go('governance', FEATURED_INCIDENT)}>
-            Replay a past incident
+            {TERMS.replayIncident}
           </Button>
         </section>
       </div>

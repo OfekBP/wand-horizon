@@ -4,6 +4,7 @@ import { useNav } from '../../../../state/navContext'
 import { useApp } from '../../../../state/appContext'
 import { money } from '../../../format'
 import { Button } from '../../../primitives/Button'
+import { pauseWorkers, TERMS } from '../../../terms'
 import { PermissionDialog } from '../PermissionDialog'
 
 /** What the user did and what changed, shown in the panel once a finding is resolved. */
@@ -84,7 +85,7 @@ function BlockedActions({ finding, onResolved }: Props) {
       </div>
       <Errors error={error} />
       <Button variant="primary" type="submit" disabled={!to || !reason.trim() || isUnavailable(index.workerById.get(to))}>
-        Move the decision
+        {TERMS.moveDecision}
       </Button>
     </form>
   )
@@ -182,7 +183,7 @@ function CostActions({ finding, onResolved }: Props) {
       </div>
       <Errors error={error} />
       <Button variant="primary" type="submit" disabled={!reason.trim()}>
-        Pause {workers.length} workers
+        {pauseWorkers(workers.length)}
       </Button>
     </form>
   )

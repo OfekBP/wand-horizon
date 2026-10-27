@@ -6,6 +6,7 @@ import { Button } from '../../primitives/Button'
 import { Overlay } from '../../primitives/Overlay'
 import { PermissionDialog } from './PermissionDialog'
 import { WorkerProfile } from './WorkerProfile'
+import { TERMS } from '../../terms'
 
 export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () => void }) {
   const { index } = useApp()
@@ -32,7 +33,7 @@ export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () 
             <Button onClick={onClose}>Close</Button>
             {isAi && (
               <Button variant="primary" onClick={() => setEditing(true)}>
-                Change permissions
+                {TERMS.changePermissions}
               </Button>
             )}
           </>

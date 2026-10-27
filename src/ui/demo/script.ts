@@ -5,6 +5,9 @@
  * Nothing here is a mock-up; if an element is not found the scene simply carries on.
  */
 
+import { FINDING_LABEL } from '../../domain/findings'
+import { TERMS } from '../terms'
+
 export interface Caption {
   step: string
   title: string
@@ -43,6 +46,8 @@ export interface Scene {
   seconds: number
   run: (ctx: Ctx) => Promise<void>
 }
+
+const exact = (text: string) => new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`)
 
 /** Matches an element by its own visible text. */
 function byText(d: Document, selector: string, re: RegExp): HTMLElement | null {
@@ -84,14 +89,14 @@ export const SCENES: Scene[] = [
       c.card(null)
       c.caption({ step: 'See', title: 'Start with three questions', body: 'Is anything stuck? Is the AI spend justified? What was the AI allowed to do? Verified, estimated and unmeasured value are never blended.' })
       c.showCursor(true)
-      await c.point(await c.find(heading(/^Is anything stuck\?$/)), 0.3, 0.5)
+      await c.point(await c.find(heading(exact(TERMS.askStuck))), 0.3, 0.5)
       await c.wait(1800)
-      await c.point(await c.find(heading(/^Is the AI spend justified\?$/)), 0.3, 0.5)
+      await c.point(await c.find(heading(exact(TERMS.askSpend))), 0.3, 0.5)
       await c.wait(1800)
-      await c.point(await c.find(heading(/^What was the AI allowed to do\?$/)), 0.3, 0.5)
+      await c.point(await c.find(heading(exact(TERMS.askAllowed))), 0.3, 0.5)
       await c.wait(1800)
       c.caption({ step: 'See', title: 'From a question to the cause', body: 'Each answer opens the situation behind it on the org map.' })
-      await c.click(await c.find((d) => byText(d, 'button', /^Investigate the most urgent$/)))
+      await c.click(await c.find((d) => byText(d, 'button', exact(TERMS.investigateUrgent))))
     },
   },
   {
@@ -106,7 +111,7 @@ export const SCENES: Scene[] = [
       c.showCursor(true)
       await c.point(await c.find((d) => d.querySelector<HTMLElement>('.mapview__stage')), 0.5, 0.45)
       await c.wait(2200)
-      await c.click(await c.find(finding('Conflicting objectives')))
+      await c.click(await c.find(finding(FINDING_LABEL['conflicting-objectives'])))
       c.caption({ step: 'Understand', title: 'Two missions, one resource', body: 'Pay suppliers early and Minimize idle cash are working against each other on one liquidity buffer.' })
       await c.wait(1500)
       await c.point(await c.find((d) => d.querySelector<HTMLElement>('.situation')), 0.5, 0.35)
@@ -122,12 +127,12 @@ export const SCENES: Scene[] = [
       if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
       await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
       c.showCursor(true)
-      await c.click(await c.find(finding('Blocked decision')))
+      await c.click(await c.find(finding(FINDING_LABEL['blocked-decision'])))
       c.caption({ step: 'Decide', title: 'A $2.4M settlement is blocked', body: 'Its approver is out of office with no delegate, and the custodian cut-off is hours away.' })
       await c.wait(2200)
       await c.point(await c.find((d) => d.querySelector<HTMLElement>('.situation')), 0.5, 0.4)
       await c.wait(1800)
-      await c.click(await c.find((d) => byText(d, 'button', /^Move the decision$/)))
+      await c.click(await c.find((d) => byText(d, 'button', exact(TERMS.moveDecision))))
       c.caption({ step: 'Decide', title: 'The decision moves to someone available', body: 'An audit event is written, and the finding clears from the map and the queue together.' })
       await c.wait(3500)
     },
@@ -141,7 +146,7 @@ export const SCENES: Scene[] = [
       if (!c.hash().startsWith('#/workforce')) c.go('#/workforce')
       await c.find((d) => d.querySelector<HTMLElement>('button.finding'))
       c.showCursor(true)
-      await c.click(await c.find(finding('Cost without verified value')))
+      await c.click(await c.find(finding(FINDING_LABEL['cost-without-proof'])))
       c.caption({ step: 'Decide', title: 'Cost is up, with nothing verified', body: 'Modeled run cost rose 74% on 14 workers with no verified value. The previous period is a labeled simulation, not a measurement.' })
       await c.wait(2400)
       await c.click(await c.find((d) => byText(d, 'button', /^Pause \d+ workers$/)))
@@ -156,18 +161,18 @@ export const SCENES: Scene[] = [
     seconds: 18,
     async run(c) {
       c.go('#/governance/op-c1')
-      await c.find((d) => byText(d, 'button', /^Run execution step$/))
+      await c.find((d) => byText(d, 'button', exact(TERMS.runStep)))
       c.caption({ step: 'Prove', title: 'A $480,000 wire is staged', body: 'Payments-Disburse-003 is authorized today. Then its permission changes before the step runs.' })
       c.showCursor(true)
       await c.wait(1800)
-      await c.click(await c.find((d) => byText(d, 'button', /^Change permissions$/)))
-      const revoke = await c.find((d) => Array.from(d.querySelectorAll<HTMLElement>('label.choice')).find((l) => /Revoke/.test(l.textContent ?? '')))
+      await c.click(await c.find((d) => byText(d, 'button', exact(TERMS.changePermissions))))
+      const revoke = await c.find((d) => Array.from(d.querySelectorAll<HTMLElement>('label.choice')).find((l) => exact(TERMS.revoke).test((l.textContent ?? '').trim())))
       await c.click(revoke)
       await c.type(await c.find((d) => d.querySelector<HTMLElement>('#perm-reason')), 'Vendor under sanctions review')
-      await c.click(await c.find((d) => byText(d, 'footer button, .overlay button, button', /^Revoke$/)))
+      await c.click(await c.find((d) => byText(d, 'footer button, .overlay button, button', exact(TERMS.revoke))))
       await c.wait(800)
       c.caption({ step: 'Prove', title: 'Now the step runs', body: 'Authorization is judged at execution time, not when the work began.' })
-      await c.click(await c.find((d) => byText(d, 'button', /^Run execution step$/)))
+      await c.click(await c.find((d) => byText(d, 'button', exact(TERMS.runStep))))
       c.caption({ step: 'Prove', title: 'Execution prevented, and recorded', body: 'The stored decision keeps the permission state it relied on, so it can be reconstructed later.' })
       await c.wait(2200)
     },
@@ -187,7 +192,7 @@ export const SCENES: Scene[] = [
       await c.click(await c.find((d) => d.querySelector<HTMLElement>('.rp__mark')))
       await c.wait(1200)
       for (let i = 0; i < 6; i++) {
-        const next = await c.find((d) => byText(d, 'button', /^Next$/), 800)
+        const next = await c.find((d) => byText(d, 'button', exact(TERMS.next)), 800)
         if (!next || (next as HTMLButtonElement).disabled) break
         await c.click(next)
         if (i === 1) c.caption({ step: 'Prove', title: 'Authorized then, permitted now', body: 'Hatched bands mark where the authority at that point differs from today. The stored decision never changes.' })

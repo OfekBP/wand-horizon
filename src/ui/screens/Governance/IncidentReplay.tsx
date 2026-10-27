@@ -8,6 +8,7 @@ import { dateTime } from '../../format'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Card } from '../../primitives/Layout'
+import { TERMS } from '../../terms'
 import './replay.css'
 
 type Lane = 'worker' | 'people' | 'record'
@@ -100,7 +101,7 @@ export function IncidentReplay({ op, timeline, selectedSeq, onPick }: Props) {
             Previous
           </Button>
           <Button size="sm" variant="ghost" disabled={idx >= n - 1} onClick={() => (setPlaying(false), onPick(timeline[Math.min(n - 1, idx + 1)].seq))}>
-            Next
+            {TERMS.next}
           </Button>
         </div>
       }
