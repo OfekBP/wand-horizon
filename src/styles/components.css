@@ -427,3 +427,23 @@
 .card { min-width: 0; }
 .table-wrap { max-width: 100%; }
 
+
+/* phones: card headers wrap so a title never shares a thin column with its buttons */
+@media (max-width: 720px) {
+  .card__head { flex-wrap: wrap; row-gap: var(--s-2); }
+}
+
+/* phones: tables keep what a manager reads first; the rest is one tap away in the row's drawer or page */
+@media (max-width: 720px) {
+  .cell-title, .cell-sub { white-space: normal; max-width: none; }
+  .table td, .table th { padding-inline: var(--s-3); }
+  .table[aria-label='Blocked operations'] :is(th, td):is([data-col='owner'], [data-col='amount'], [data-col='seq']),
+  .table[aria-label='Conflicts'] :is(th, td):is([data-col='workers'], [data-col='status']),
+  .table[aria-label='Performance concerns'] :is(th, td):is([data-col='metric'], [data-col='thr']),
+  .table[aria-label='Cases'] :is(th, td):is([data-col='authority'], [data-col='owner'], [data-col='amount'], [data-col='last']),
+  .table[aria-label='Event log'] :is(th, td):is([data-col='time'], [data-col='actor']) { display: none; }
+  .table th[data-col='sev'], .table td[data-col='sev'] { width: auto; }
+}
+@media (max-width: 720px) {
+  .tab { padding: 0 var(--s-2); font-size: var(--t-xs); }
+}

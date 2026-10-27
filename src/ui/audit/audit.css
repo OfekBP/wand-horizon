@@ -54,3 +54,8 @@ button.tl__card:focus-visible { box-shadow: var(--ring); }
   padding: 0 8px;
 }
 .tl__item--after .tl__card { opacity: 0.85; }
+
+/* phones: the date under an event may wrap instead of widening the page */
+@media (max-width: 720px) {
+  .tl__meta { white-space: normal; }
+}

@@ -64,3 +64,15 @@
 .roi__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--s-3); margin: 0; }
 .roi__grid dt { font-size: var(--t-xs); color: var(--ink-3); }
 .roi__grid dd { margin: 2px 0 0; font-weight: 560; }
+
+/* phones: long permission codes wrap instead of widening the page */
+@media (max-width: 720px) {
+  .perm { flex-wrap: wrap; }
+  .perm__scope { overflow-wrap: anywhere; }
+}
+
+/* phones: the registry keeps the worker, the return and the cost; the rest is one tap away in the profile */
+@media (max-width: 720px) {
+  .table[aria-label='Workforce registry'] :is(th, td):is([data-col='team'], [data-col='owner'], [data-col='value'], [data-col='status']) { display: none; }
+  .filters { flex-wrap: wrap; }
+}

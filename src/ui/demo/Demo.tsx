@@ -7,8 +7,11 @@ import './demo.css'
 import { createMusic, type Music } from './music'
 import { SCENES, SCENE_STARTS, TOTAL_SECONDS, type Caption, type CardText, type Ctx } from './script'
 
-const FRAME_W = 1440
-const FRAME_H = 810
+// Desktop shows the app at its full 1440px layout. On a phone that would shrink to a quarter and be unreadable, so the
+// player shows the app at tablet width instead (900x675, a 4:3 stage) where text stays legible.
+const FULL = { w: 1440, h: 810 }
+const COMPACT = { w: 900, h: 675 }
+const PHONE = '(max-width: 720px)'
 
 class Cancelled extends Error {}
 
@@ -24,6 +27,8 @@ function frameSrc(run: number) {
 export function Demo() {
   const frame = useRef<HTMLIFrameElement>(null)
   const stage = useRef<HTMLDivElement>(null)
+  const [compact] = useState(() => typeof window.matchMedia === 'function' && window.matchMedia(PHONE).matches)
+  const FRAME = compact ? COMPACT : FULL
   const token = useRef(0)
   const paused = useRef(false)
   const scaleRef = useRef(0.8)
@@ -44,7 +49,7 @@ export function Demo() {
     const el = stage.current
     if (!el) return
     const apply = () => {
-      const s = el.clientWidth / FRAME_W
+      const s = el.clientWidth / FRAME.w
       scaleRef.current = s
       setScale(s)
     }
@@ -53,7 +58,7 @@ export function Demo() {
     const ro = new ResizeObserver(apply)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [FRAME.w])
 
   useEffect(
     () => () => {
@@ -221,14 +226,14 @@ export function Demo() {
         </p>
 
         <section className="player" aria-label="Product demo player">
-          <div className="player__stage" ref={stage}>
+          <div className="player__stage" ref={stage} data-compact={compact || undefined}>
             <iframe
               ref={frame}
               className="player__frame"
               title="Wand Horizon System, driven by the demo"
               src={initialSrc}
               tabIndex={-1}
-              style={{ width: FRAME_W, height: FRAME_H, transform: `scale(${scale})` }}
+              style={{ width: FRAME.w, height: FRAME.h, transform: `scale(${scale})` }}
             />
             <div className={`player__veil${card || idle ? ' is-on' : ''}`} aria-hidden="true" />
 

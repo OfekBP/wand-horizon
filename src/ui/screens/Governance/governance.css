@@ -79,3 +79,17 @@ details.tech > summary { cursor: pointer; list-style: none; padding: var(--s-4) 
 details.tech > summary::-webkit-details-marker { display: none; }
 details.tech[open] > summary .chev { transform: rotate(180deg); }
 details.tech > .gov-grid { padding: 0 var(--s-5) var(--s-5); }
+
+/* phones: the execution bar stacks and its buttons share the width */
+@media (max-width: 720px) {
+  .policy { flex-wrap: wrap; }
+  .policy__actions { width: 100%; }
+  .policy__actions .btn { flex: 1 1 140px; }
+}
+
+/* phones: the technical record uses the width it has */
+@media (max-width: 720px) {
+  .verdict__head { flex-wrap: wrap; }
+  .verdict { padding: var(--s-4); }
+  details.tech > .gov-grid { padding-inline: var(--s-2); }
+}

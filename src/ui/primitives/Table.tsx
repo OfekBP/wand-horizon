@@ -36,6 +36,7 @@ export function DataTable<T>({ rows, columns, rowKey, onRowClick, selectedKey, e
             {columns.map((c) => (
               <th
                 key={c.key}
+                data-col={c.key}
                 className={c.align === 'right' ? 'right' : ''}
                 style={c.width ? { width: c.width } : undefined}
                 aria-sort={sort?.key === c.key ? (sort.dir === 1 ? 'ascending' : 'descending') : undefined}
@@ -62,7 +63,7 @@ export function DataTable<T>({ rows, columns, rowKey, onRowClick, selectedKey, e
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
               >
                 {columns.map((c, i) => (
-                  <td key={c.key} className={c.align === 'right' ? 'right num' : ''}>
+                  <td key={c.key} data-col={c.key} className={c.align === 'right' ? 'right num' : ''}>
                     {/* the first cell holds a real button so keyboard and screen-reader users can open the row */}
                     {onRowClick && i === 0 ? (
                       <button

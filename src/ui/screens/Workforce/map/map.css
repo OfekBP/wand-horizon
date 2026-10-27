@@ -152,3 +152,8 @@
 
 .mapview__toolbar .seg { max-width: 100%; overflow-x: auto; }
 .mapview__toolbar .seg button { white-space: nowrap; }
+
+/* phones: all the lenses are visible at once instead of hiding behind a sideways scroll */
+@media (max-width: 720px) {
+  .mapview__toolbar .seg { flex-wrap: wrap; overflow: visible; }
+}

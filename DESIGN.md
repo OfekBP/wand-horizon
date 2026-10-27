@@ -274,6 +274,9 @@ Soft but not bubbly. Controls that act (buttons, badges, chips, toast, role sele
 ### Start here (the three questions)
 - The System opens on three equal question cards (Is anything stuck? Is the AI spend justified? What was the AI allowed to do?), each with one live number and one primary pill button. Detail sits under a collapsed "More detail" disclosure. A dismissible accent-wash strip points first-time visitors to the demo.
 
+### Phones
+- Desktop is the design; phones get additions only, all inside `max-width: 720px` media queries (one exception: the demo player shows the app at a 900px, 4:3 stage on phones so its text stays readable). The top bar wraps, the rail becomes a scrolling strip with labels, tables keep their first columns (worker, return, cost; severity, operation, waiting) and drop the rest to the row's drawer or page, the replay stacks lane labels above their tracks, and long codes wrap instead of widening the page. Checked at 320, 360, 390, 430 and 768px for sideways scrolling.
+
 ### Return on cost signal
 - A pill with a shape, a multiple and a word, never colour alone: green check "Pays off", amber triangle "Thin or unproven", red cross "Not paying off", grey dash "No evidence". Colours reuse the existing ok, high, critical and medium tokens; red and amber keep their meaning of "act on this". A one-line legend states the rule wherever the signal appears.
 

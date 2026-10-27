@@ -73,3 +73,6 @@
   .player__poster--end .lbtn { min-height: 38px; font-size: 13px; padding: 0 14px; width: auto; }
   .player__poster--end .player__cardbody { display: none; }
 }
+
+/* phones: a 4:3 stage so the app can be shown at a size where its text is readable */
+.player__stage[data-compact] { aspect-ratio: 4 / 3; }

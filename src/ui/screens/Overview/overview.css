@@ -142,3 +142,13 @@ details.card[open] > summary .chev { transform: rotate(180deg); }
 .ask__actions { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-top: auto; }
 .ask__actions .btn { margin-top: 0; }
 .roi-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 var(--s-4); max-width: 110ch; }
+
+/* phones: the teams table keeps what a manager reads first */
+@media (max-width: 720px) {
+  .table[aria-label='Teams'] :is(th, td):is([data-col='people'], [data-col='ai']) { display: none; }
+}
+
+/* the smallest phones: one colour count per row */
+@media (max-width: 380px) {
+  .ask__counts { grid-template-columns: 1fr; }
+}
