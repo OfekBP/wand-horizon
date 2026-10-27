@@ -88,6 +88,7 @@ Use the **Acting as** selector to record actions as an Executive, Manager or Inv
 ## More
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): code layout, the authorization and audit model, metric definitions, the decision log and known limitations.
+- [docs/email/wand-horizon-intro.html](docs/email/wand-horizon-intro.html): the introduction email (paste the HTML into Gmail, or open it in a browser to preview). It loads the logo from the live site.
 - [DESIGN.md](DESIGN.md) and [PRODUCT.md](PRODUCT.md): the design system and product context.
 - Every push and pull request runs typecheck, lint, tests and the build (`.github/workflows/ci.yml`).
 
