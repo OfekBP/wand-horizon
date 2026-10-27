@@ -44,7 +44,7 @@ export function RoiBadge({ status, multiple, compact }: { status: RoiStatus; mul
       <Badge tone={TONE[status]}>
         <Shape status={status} />
         {m && <strong className="num">{m}</strong>}
-        {!compact && <span>{label}</span>}
+        {!compact && <span className="roi__word">{label}</span>}
       </Badge>
     </span>
   )

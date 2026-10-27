@@ -127,40 +127,70 @@
   .topbar, .page { padding-inline: var(--s-5); }
 }
 
-/* narrow: top bar */
-@media (max-width: 720px) {
-  .shell { grid-template-columns: minmax(0, 1fr); }
-  .side { position: relative; height: auto; flex-direction: row; align-items: center; padding: var(--s-2) var(--s-3); gap: var(--s-3); overflow-x: auto; }
-  .nav { flex-direction: row; }
-  .side__foot { margin-top: 0; flex-direction: row; }
-  .nav__item[aria-current='page']::before { display: none; }
-  .topbar, .page { padding-inline: var(--s-4); }
-}
-
-
-
-
-/* narrow: keep the person's name, drop the prefix; the top rail shows its labels */
-@media (max-width: 720px) {
-  .who__prefix { display: none; }
-  .brand__line { display: none; }
-  .nav__label { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: nowrap; font-size: var(--t-xs); }
-  .nav__item { width: auto; min-height: 44px; padding: 0 var(--s-3); gap: var(--s-2); }
-  .nav__count { position: static; }
-  .side__foot .btn span { position: static; width: auto; height: auto; clip: auto; }
-}
 .credit { padding: var(--s-5) var(--s-6); text-align: center; font-size: var(--t-xs); color: var(--ink-3); }
 html[data-embed] .topbar__link, html[data-embed] .credit { display: none; }
 
-@media (max-width: 720px) { .topbar__link[href^="https"] { display: none; } }
-
-/* phones: the top bar wraps instead of pushing the page sideways */
+/* ---------- phones: an app shell ----------
+   A dark app bar on top (logo, demo role), the four screens as a tab bar at the bottom like an iPhone app, and the content
+   in between. Everything is inside this query, so the desktop layout is untouched. Safe-area insets keep the bars clear of
+   the notch and the home indicator. */
 @media (max-width: 720px) {
-  .topbar { flex-wrap: wrap; row-gap: 2px; padding-block: var(--s-2); min-height: 0; }
-  .topbar__back { flex: 1 0 100%; justify-content: flex-start; }
-  .topbar__spacer { display: none; }
-  .topbar__link { padding: 6px 8px; font-size: var(--t-xs); }
-  .who { margin-left: auto; white-space: nowrap; max-width: 100%; }
-  .who__name { overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-  .who select { padding: 5px 8px; }
+  :root { --app-bar-h: 52px; --tabbar-h: 58px; --logo-w: 96px; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
+  button, a, select, summary, [role='tab'] { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+
+  .shell { grid-template-columns: minmax(0, 1fr); min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); }
+
+  /* the logo lives in the app bar, at a size that reads */
+  .brand { position: fixed; top: env(safe-area-inset-top); left: max(var(--s-4), env(safe-area-inset-left)); height: var(--app-bar-h); display: flex; align-items: center; padding: 0; z-index: 45; }
+  .brand__line { display: none; }
+  .logo { width: var(--logo-w); height: auto; overflow: visible; }
+  .logo__img { width: var(--logo-w); max-width: none; }
+
+  /* the tab bar */
+  .side {
+    position: fixed; inset: auto 0 0 0; height: auto; z-index: 40;
+    flex-direction: row; align-items: stretch; gap: 0; overflow: visible;
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    background: var(--night); border-top: 1px solid var(--night-line);
+  }
+  .nav { flex: 1; min-width: 0; flex-direction: row; gap: 0; }
+  .nav__item {
+    flex: 1 1 0; min-width: 0; width: auto; min-height: var(--tabbar-h);
+    flex-direction: column; justify-content: center; align-items: center; gap: 3px;
+    padding: 6px 2px 4px; border-radius: 0; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  }
+  .nav__item svg { width: 22px; height: 22px; }
+  .nav__label { position: static; width: auto; height: auto; overflow: visible; clip: auto; flex: none; max-width: 100%; font-size: 10px; line-height: 1.15; font-weight: 540; text-align: center; white-space: normal; }
+  .nav__count { position: absolute; top: 5px; left: calc(50% + 5px); min-width: 16px; padding: 0 5px; font-size: 10px; line-height: 16px; text-align: center; }
+  .nav__item:hover { background: transparent; }
+  .nav__item:active { background: rgba(201, 179, 240, 0.12); }
+  .nav__item[aria-current='page'] { background: transparent; color: var(--night-accent); }
+  .nav__item[aria-current='page']::before { display: block; content: ''; position: absolute; top: 0; bottom: auto; left: 24%; right: 24%; width: auto; height: 3px; border-radius: 0 0 3px 3px; background: var(--night-accent); }
+
+  .side__foot { flex: 0 0 64px; margin: 0; padding: 0; flex-direction: row; align-items: stretch; }
+  .side__sim { display: none; }
+  .side__foot .btn { flex: 1; min-height: var(--tabbar-h); flex-direction: column; gap: 3px; padding: 6px 2px 4px; border: 0; border-radius: 0; background: transparent; color: var(--night-ink-2); font-size: 10px; line-height: 1.15; text-align: center; white-space: normal; }
+  .side__foot .btn span { position: static; width: auto; height: auto; clip: auto; overflow: visible; font-size: 10px; }
+  .side__foot .btn svg { width: 20px; height: 20px; }
+  .side__foot .btn:active:not(:disabled) { background: rgba(201, 179, 240, 0.12); }
+
+  /* the app bar */
+  .topbar {
+    flex-wrap: wrap; align-items: center; gap: 0 var(--s-1); min-height: 0;
+    padding: env(safe-area-inset-top) max(var(--s-4), env(safe-area-inset-right)) 0 max(var(--s-4), env(safe-area-inset-left));
+    background: var(--night); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--night-line);
+  }
+  .topbar__spacer { display: block; flex: 1 1 0; height: var(--app-bar-h); margin-left: calc(var(--logo-w) + var(--s-3)); }
+  .topbar__link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s-2); font-size: var(--t-sm); color: var(--night-ink-2); }
+  .topbar__link:hover { background: transparent; color: var(--night-ink); }
+  .topbar__link[href='#/'], .topbar__link[href^='https'] { display: none; }
+  .who { margin: 0; padding: 3px; background: var(--night-2); border-color: var(--night-line); }
+  .who > span { display: none; }
+  .who select { min-height: 32px; padding: 0 var(--s-3); font-size: 16px; background: rgba(201, 179, 240, 0.16); color: var(--night-accent); }
+  .topbar__back { order: 9; flex: 1 0 100%; justify-content: flex-start; min-height: 44px; margin-left: calc(-1 * var(--s-3)); color: var(--night-ink); }
+
+  .page { padding-inline: max(var(--s-4), env(safe-area-inset-left)) max(var(--s-4), env(safe-area-inset-right)); }
+  .credit { padding: var(--s-5) var(--s-4) var(--s-6); }
 }

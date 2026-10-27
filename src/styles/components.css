@@ -447,3 +447,21 @@
 @media (max-width: 720px) {
   .tab { padding: 0 var(--s-2); font-size: var(--t-xs); }
 }
+
+/* phones: touch sizes, 16px inputs (iOS zooms the page for anything smaller), bottom sheets, toast clear of the tab bar */
+@media (max-width: 720px) {
+  .btn { min-height: 44px; }
+  .btn--sm { min-height: 36px; }
+  .btn:active:not(:disabled) { transform: scale(0.98); }
+  .input, .select, .textarea, input, select, textarea { font-size: 16px; }
+  .seg button { min-height: 40px; }
+
+  .overlay--drawer, .overlay--dialog { align-items: flex-end; justify-content: stretch; padding: 0; }
+  .panel--drawer, .panel--dialog { width: 100%; height: auto; max-height: 92dvh; border-radius: var(--r-lg) var(--r-lg) 0 0; animation: rise 0.24s var(--ease); }
+  .panel--drawer { height: 92dvh; }
+  .panel--drawer::before, .panel--dialog::before { content: ''; align-self: center; flex: none; width: 36px; height: 4px; margin-top: 8px; border-radius: 2px; background: var(--line-strong); }
+  .panel__foot { padding-bottom: calc(var(--s-4) + env(safe-area-inset-bottom)); }
+  .panel--dialog .panel__foot { border-radius: 0; }
+
+  .toast { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + var(--s-3)); max-width: calc(100vw - 24px); }
+}
