@@ -5,9 +5,9 @@
 
 /**
  * Public GitHub repository. Set VITE_GITHUB_REPO_URL (in a `.env` file or the host's build settings) to the real
- * repository URL. Until then the button opens github.com, so it never points at a made-up repository.
+ * repository URL. Defaults to the project repository.
  */
-export const GITHUB_REPO_URL: string = import.meta.env.VITE_GITHUB_REPO_URL || 'https://github.com'
+export const GITHUB_REPO_URL: string = import.meta.env.VITE_GITHUB_REPO_URL || 'https://github.com/OfekBP/wand-horizon'
 
 /**
  * Demo video. There is no video yet. When one exists, set VITE_DEMO_VIDEO_URL (or replace this constant) and the

@@ -33,7 +33,7 @@ Set these at build time (a `.env` file or the host's build settings); see `src/c
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_GITHUB_REPO_URL` | The repository URL for the "View GitHub Repository" buttons. Until set, the buttons open `https://github.com`. |
+| `VITE_GITHUB_REPO_URL` | The repository URL for the "View GitHub Repository" buttons. Defaults to `https://github.com/OfekBP/wand-horizon`. |
 | `VITE_DEMO_VIDEO_URL` | Demo video link. There is no video yet; while this is empty no demo link is shown anywhere. |
 
 Use **Reset demo** (bottom of the sidebar) to restore the original data. State is in memory only, so a refresh also resets it.
