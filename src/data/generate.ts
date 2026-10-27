@@ -304,7 +304,7 @@ export function createInitialState(): AppState {
   /* ---------- performance concerns ---------- */
   const heroWorkerNames = new Set([
     'Settlement-Recon-007', 'Payments-Disburse-003', 'Payments-Disburse-011', 'Payments-Disburse-014',
-    'Claims-Payout-005', 'Claims-Payout-009', 'Sanctions-Review-004',
+    'Claims-Payout-005', 'Claims-Payout-009', 'Sanctions-Review-004', 'Ledger-Adjust-002',
   ])
   const concernKinds: Array<{ metric: string; unit: PerformanceConcern['unit']; threshold: number; lo: number; hi: number }> = [
     { metric: 'Error rate', unit: '%', threshold: 2, lo: 3.5, hi: 9 },
@@ -433,6 +433,18 @@ export function createInitialState(): AppState {
   startOp(opD3)
   attempt(opD3, NOW - 19 * HOUR)
 
+  // R1: authority at risk. The ledger limit was lowered below this in-flight amount after it started,
+  // so it would be denied if it ran now. It has not been attempted, so there is no stored decision yet.
+  const r1 = aiByName('Ledger-Adjust-002')
+  const dana0 = human('Dana Whitfield')
+  startOp(mkOp({
+    id: 'op-r1', workerId: r1.id, requiredScope: 'ledger:adjust', amount: 140_000, status: 'in_progress',
+    startedAt: iso(NOW - 6 * HOUR), severity: 'high', decisionOwnerId: dana0.id,
+    title: `Post ledger adjustment ADJ-4417 (${usd(140_000)})`,
+    summary: 'Month-end accrual correction prepared and staged for posting.',
+  }))
+  permission(NOW - 4 * HOUR, dana0.name, r1.id, 'ledger:adjust', 'modify', 'Lower limit pending audit review', 100_000)
+
   /* bulk operations */
   const scopes = Object.keys(SCOPES)
   const reserved = new Set(heroWorkerIds)
@@ -491,7 +503,7 @@ export function createInitialState(): AppState {
   /* ---------- replay ---------- */
   let state: AppState = {
     teams, workers, values, operations: [], conflicts, concerns, events: [], nextSeq: 1,
-    clock: iso(NOW - 41 * DAY), actingAs: { name: dana.name, role: 'executive' },
+    clock: iso(NOW - 41 * DAY), seedClock: iso(NOW), actingAs: { name: dana.name, role: 'executive' },
   }
   const ordered = steps.map((s, i) => ({ ...s, i })).sort((a, b) => a.at - b.at || a.i - b.i)
   for (const step of ordered) {
@@ -499,7 +511,7 @@ export function createInitialState(): AppState {
     if (!r.ok) throw new Error(`Fixture replay failed at ${step.action.type} (${step.action.at}): ${r.error}`)
     state = r.state
   }
-  return { ...state, clock: iso(NOW) }
+  return { ...state, clock: iso(NOW), seedClock: iso(NOW) }
 }
 
 export function personasFor(state: AppState): Record<SimRole, Actor> {

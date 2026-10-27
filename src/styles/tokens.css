@@ -1,63 +1,75 @@
 /*
  * Design tokens. Every colour, size and radius in the app comes from here.
- * Colour is reserved for meaning:
- *   accent  -> interactive elements and VERIFIED value
- *   red/amber -> severity only (critical, high)
- *   green   -> a confirmed good state only
- * Everything else is warm neutral.
+ *
+ * Colour jobs:
+ *   violet accent   -> interaction, selection and VERIFIED value
+ *   night           -> the navigation rail only
+ *   red / amber     -> severity and denied outcomes only
+ *   green           -> an allowed / confirmed state only
+ * Everything else is warm neutral. Text pairs below are checked against WCAG AA in tests/contrast.test.ts.
  */
 :root {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Liberation Mono', monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Liberation Mono', monospace;
+  --font-accent: 'Newsreader', Georgia, 'Times New Roman', serif;
 
-  /* neutrals */
-  --bg: #f4f4f1;
-  --surface: #ffffff;
-  --surface-sunken: #f8f8f5;
-  --line: #e6e6e0;
-  --line-strong: #d3d3cb;
-  --ink: #16181d;
-  --ink-2: #454955;
-  --ink-3: #6b6f7c;
-  --ink-4: #9a9da8;
+  /* neutrals: warm stone ground, paper surfaces */
+  --bg: #f4f2ed;
+  --surface: #fdfcf9;
+  --surface-sunken: #f8f6f1;
+  --line: #e5e1d8;
+  --line-strong: #cfc9bd;
+  --ink: #1d1824;
+  --ink-2: #473f55;
+  --ink-3: #675f73;
+  --ink-4: #8a8296; /* non-text only: dashed outlines, disabled rules */
 
-  /* accent (interactive + verified value) */
-  --accent: #2a4d8f;
-  --accent-hover: #213f76;
-  --accent-wash: #edf1f9;
-  --accent-line: #c9d5ec;
+  /* accent */
+  --accent: #5b3fa8;
+  --accent-hover: #4a3190;
+  --accent-wash: #efeaf9;
+  --accent-line: #d2c5ee;
+
+  /* night rail */
+  --night: #130f1c;
+  --night-2: #1d1829;
+  --night-line: #2e2742;
+  --night-ink: #f1ecf8;
+  --night-ink-2: #b9aed0;
+  --night-accent: #c9b3f0;
+  --night-critical: #f4b0aa;
 
   /* value encoding: solid = verified, hatched = estimated, outlined = unmeasured */
   --value-verified: var(--accent);
-  --value-estimated-fg: #7f9ad0;
-  --value-estimated-bg: #dfe7f6;
-  --value-unmeasured: #b9bcc6;
+  --value-estimated-fg: #9a82d4;
+  --value-estimated-bg: #e6def6;
+  --value-unmeasured: #8a8296;
 
   /* severity */
   --critical: #b3261e;
   --critical-wash: #fcefed;
   --critical-line: #f1c7c3;
-  --high: #a85a08;
-  --high-wash: #fdf2e4;
-  --high-line: #f0d4aa;
-  --medium: #4f5463;
-  --medium-wash: #eeeeea;
-  --medium-line: #dcdcd4;
-  --low: #7b7f8c;
-  --low-wash: #f4f4f1;
-  --low-line: #e6e6e0;
+  --high: #a35607;
+  --high-wash: #fdf1e1;
+  --high-line: #efd3a8;
+  --medium: #4d4659;
+  --medium-wash: #eeebe4;
+  --medium-line: #dad5c9;
+  --low: #655e70;
+  --low-wash: #f1eee8;
+  --low-line: #e2ddd2;
   --ok: #1d7448;
   --ok-wash: #e8f4ed;
   --ok-line: #bfdfcc;
 
-  /* type scale */
+  /* type scale: fixed rem-equivalent steps, ratio ~1.2 */
   --t-xs: 12px;
   --t-sm: 13px;
   --t-md: 14px;
   --t-lg: 16px;
   --t-xl: 20px;
-  --t-2xl: 26px;
-  --t-3xl: 32px;
+  --t-2xl: 24px;
+  --t-3xl: 34px;
 
   /* spacing (4px base) */
   --s-1: 4px;
@@ -69,13 +81,17 @@
   --s-8: 32px;
   --s-10: 40px;
 
-  --r-sm: 6px;
-  --r-md: 10px;
-  --r-lg: 14px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --pill: 999px;
 
-  --shadow-1: 0 1px 2px rgba(22, 24, 29, 0.05);
-  --shadow-overlay: 0 12px 40px rgba(22, 24, 29, 0.18), 0 2px 8px rgba(22, 24, 29, 0.08);
+  --shadow-1: none;
+  --shadow-overlay: 0 14px 44px rgba(19, 15, 28, 0.2), 0 2px 8px rgba(19, 15, 28, 0.08);
 
-  --sidebar-w: 236px;
-  --ring: 0 0 0 3px rgba(42, 77, 143, 0.28);
+  --sidebar-w: 244px;
+  --topbar-h: 56px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ring: 0 0 0 3px rgba(91, 63, 168, 0.32);
 }
+

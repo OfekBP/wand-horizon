@@ -18,7 +18,7 @@ const op = (over: Partial<Operation> = {}): Operation => ({
 const base = (): AppState => ({
   teams: [{ id: 't', name: 'T' }],
   workers: [worker('ai-1', 'ai'), worker('h-1', 'human'), worker('h-2', 'human')],
-  values: [], operations: [], conflicts: [], concerns: [], events: [], nextSeq: 1, clock: at(0),
+  values: [], operations: [], conflicts: [], concerns: [], events: [], nextSeq: 1, clock: at(0), seedClock: at(0),
   actingAs: { name: 'Exec', role: 'executive' },
 })
 

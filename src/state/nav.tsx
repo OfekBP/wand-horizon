@@ -3,15 +3,35 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 export type Screen = 'overview' | 'queue' | 'workforce' | 'governance'
 const SCREENS: Screen[] = ['overview', 'queue', 'workforce', 'governance']
 
+export const SCREEN_LABEL: Record<Screen, string> = {
+  overview: 'Overview',
+  queue: 'Work Queue',
+  workforce: 'Workforce',
+  governance: 'Governance',
+}
+
 interface Toast {
   message: string
   link?: { label: string; screen: Screen; id?: string }
 }
 
+interface Place {
+  screen: Screen
+  id: string | null
+}
+
+interface GoOptions {
+  /** A fresh start from the primary navigation: forgets where the user came from. */
+  fresh?: boolean
+}
+
 interface Ctx {
   screen: Screen
   selectedId: string | null
-  go: (screen: Screen, id?: string | null) => void
+  go: (screen: Screen, id?: string | null, options?: GoOptions) => void
+  /** Where the user came from when they crossed to another screen, so a case never loses its thread. */
+  backTo: Place | null
+  back: () => void
   toast: Toast | null
   notify: (message: string, link?: Toast['link']) => void
   dismissToast: () => void
@@ -19,16 +39,23 @@ interface Ctx {
 
 const NavContext = createContext<Ctx | null>(null)
 
-function parse(hash: string): { screen: Screen; id: string | null } {
+function parse(hash: string): Place {
   const [, s, id] = hash.split('/')
   return { screen: (SCREENS as string[]).includes(s) ? (s as Screen) : 'overview', id: id ? decodeURIComponent(id) : null }
 }
 
+const hashFor = (p: Place) => `#/${p.screen}${p.id ? `/${encodeURIComponent(p.id)}` : ''}`
+
 /** Navigation lives in the URL hash so refresh and links work, without a router dependency. */
 export function NavProvider({ children }: { children: ReactNode }) {
-  const [loc, setLoc] = useState(() => parse(window.location.hash))
+  const [loc, setLoc] = useState<Place>(() => parse(window.location.hash))
+  const [backTo, setBackTo] = useState<Place | null>(null)
   const [toast, setToast] = useState<Toast | null>(null)
   const timer = useRef<number | undefined>(undefined)
+  const locRef = useRef(loc)
+  useEffect(() => {
+    locRef.current = loc
+  }, [loc])
 
   useEffect(() => {
     const onHash = () => setLoc(parse(window.location.hash))
@@ -36,11 +63,28 @@ export function NavProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
-  const go = useCallback((screen: Screen, id?: string | null) => {
-    const next = `#/${screen}${id ? `/${encodeURIComponent(id)}` : ''}`
-    if (window.location.hash === next) setLoc({ screen, id: id ?? null })
+  const navigate = useCallback((place: Place) => {
+    const next = hashFor(place)
+    if (window.location.hash === next) setLoc(place)
     else window.location.hash = next
   }, [])
+
+  const go = useCallback(
+    (screen: Screen, id?: string | null, options?: GoOptions) => {
+      const from = locRef.current
+      if (options?.fresh) setBackTo(null)
+      else if (from.screen !== screen) setBackTo(from)
+      navigate({ screen, id: id ?? null })
+    },
+    [navigate],
+  )
+
+  const back = useCallback(() => {
+    if (!backTo) return
+    const target = backTo
+    setBackTo(null)
+    navigate(target)
+  }, [backTo, navigate])
 
   const dismissToast = useCallback(() => setToast(null), [])
   const notify = useCallback((message: string, link?: Toast['link']) => {
@@ -50,8 +94,8 @@ export function NavProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ screen: loc.screen, selectedId: loc.id, go, toast, notify, dismissToast }),
-    [loc, go, toast, notify, dismissToast],
+    () => ({ screen: loc.screen, selectedId: loc.id, go, backTo, back, toast, notify, dismissToast }),
+    [loc, go, backTo, back, toast, notify, dismissToast],
   )
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>
 }

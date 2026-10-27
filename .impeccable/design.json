@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-27T00:00:00Z",
+  "title": "Design System: Accord",
+  "extensions": {
+    "colorMeta": {
+      "accent-violet": { "role": "primary", "displayName": "Ceremonial Violet", "canonical": "#5b3fa8", "tonalRamp": ["#1f1440", "#2f1f66", "#43308a", "#5b3fa8", "#7a62bf", "#9a82d4", "#c9b3f0", "#efeaf9"] },
+      "night": { "role": "neutral", "displayName": "Night Rail", "canonical": "#130f1c", "tonalRamp": ["#130f1c", "#1d1829", "#2e2742", "#4a4063", "#6c6187", "#9d91b6", "#b9aed0", "#f1ecf8"] },
+      "stone-ground": { "role": "neutral", "displayName": "Stone Ground", "canonical": "#f4f2ed", "tonalRamp": ["#675f73", "#8a8296", "#cfc9bd", "#e5e1d8", "#eeebe4", "#f4f2ed", "#f8f6f1", "#fdfcf9"] },
+      "critical": { "role": "semantic", "displayName": "Critical Red", "canonical": "#b3261e", "tonalRamp": ["#4d0f0b", "#7a1a15", "#97201a", "#b3261e", "#d0645d", "#f4b0aa", "#f1c7c3", "#fcefed"] },
+      "high": { "role": "semantic", "displayName": "High Amber", "canonical": "#a35607", "tonalRamp": ["#3d2003", "#6f3d06", "#8a4a06", "#a35607", "#c98a3f", "#e3b36f", "#efd3a8", "#fdf1e1"] },
+      "ok": { "role": "semantic", "displayName": "Allowed Green", "canonical": "#1d7448", "tonalRamp": ["#0a2f1d", "#155836", "#1d7448", "#3a9468", "#6db591", "#9ccdb3", "#bfdfcc", "#e8f4ed"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Verified amount and verdict word only." },
+      "headline": { "displayName": "Page title", "purpose": "h1; may contain one Newsreader italic accent phrase." },
+      "seq": { "displayName": "Sequence / identity", "purpose": "Ids, scopes, #seq numbers; tabular, muted." },
+      "accent-phrase": { "displayName": "Accent phrase", "purpose": "One phrase in a page title and empty-state titles only." }
+    },
+    "shadows": [
+      { "name": "overlay", "value": "0 14px 44px rgba(19,15,28,0.2), 0 2px 8px rgba(19,15,28,0.08)", "purpose": "Dialogs, drawers, toast only." },
+      { "name": "ring", "value": "0 0 0 3px rgba(91,63,168,0.32)", "purpose": "Focus ring on light surfaces; rgba(201,179,240,0.45) on night." }
+    ],
+    "motion": [
+      { "name": "ease", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "All state transitions, 0.16-0.22s; reduced-motion collapses to ~0." },
+      { "name": "flash", "value": "1.6s accent-wash to transparent", "purpose": "One brief highlight on a record that just changed." }
+    ],
+    "breakpoints": [
+      { "name": "rail-collapse", "value": "1100px" },
+      { "name": "grid-stack", "value": "1000px" },
+      { "name": "narrow", "value": "720px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button", "kind": "button", "refersTo": "button-primary",
+      "description": "Violet pill for the one main action in a context.",
+      "html": "<button class=\"ds-btn-primary\">Reassign</button>",
+      "css": ".ds-btn-primary{min-height:36px;padding:0 16px;border-radius:999px;border:1px solid #5b3fa8;background:#5b3fa8;color:#fff;font:520 13px Geist,system-ui,sans-serif;cursor:pointer;transition:background .18s cubic-bezier(.22,1,.36,1)}.ds-btn-primary:hover{background:#4a3190;border-color:#4a3190}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(91,63,168,.32)}.ds-btn-primary:active{background:#3d2878}"
+    },
+    {
+      "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary",
+      "description": "Paper pill with a strong hairline.",
+      "html": "<button class=\"ds-btn\">Cancel</button>",
+      "css": ".ds-btn{min-height:36px;padding:0 16px;border-radius:999px;border:1px solid #cfc9bd;background:#fdfcf9;color:#1d1824;font:520 13px Geist,system-ui,sans-serif;cursor:pointer}.ds-btn:hover{background:#f8f6f1;border-color:#8a8296}.ds-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(91,63,168,.32)}"
+    },
+    {
+      "name": "Severity Badge", "kind": "chip", "refersTo": "badge",
+      "description": "22px pill with dot; wash, line and text from the severity set.",
+      "html": "<span class=\"ds-badge\"><i></i>Critical</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;border:1px solid #f1c7c3;background:#fcefed;color:#b3261e;font:540 12px Geist,system-ui,sans-serif}.ds-badge i{width:6px;height:6px;border-radius:50%;background:currentColor}"
+    },
+    {
+      "name": "Card", "kind": "card", "refersTo": "card",
+      "description": "Paper surface, 12px radius, hairline, no shadow.",
+      "html": "<div class=\"ds-card\"><h2>Needs a decision</h2><p>Most severe blocked operations</p></div>",
+      "css": ".ds-card{background:#fdfcf9;border:1px solid #e5e1d8;border-radius:12px;padding:20px;font-family:Geist,system-ui,sans-serif;color:#1d1824}.ds-card h2{margin:0;font-size:16px;font-weight:560;letter-spacing:-.015em}.ds-card p{margin:2px 0 0;font-size:13px;color:#675f73}"
+    },
+    {
+      "name": "Night Card (Assure lane)", "kind": "card", "refersTo": "card-night",
+      "description": "The night chapter on Overview.",
+      "html": "<div class=\"ds-night\"><h2>Authority at risk</h2><p>Would be denied if run now</p></div>",
+      "css": ".ds-night{background:#130f1c;border:1px solid #130f1c;border-radius:12px;padding:20px;color:#f1ecf8;font-family:Geist,system-ui,sans-serif}.ds-night h2{margin:0;font-size:16px;font-weight:560}.ds-night p{margin:2px 0 0;font-size:13px;color:#b9aed0}"
+    },
+    {
+      "name": "Text Input", "kind": "input", "refersTo": "input",
+      "description": "38px field with violet focus ring.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search\">",
+      "css": ".ds-input{width:100%;min-height:38px;padding:7px 12px;border:1px solid #cfc9bd;border-radius:8px;background:#fdfcf9;font:400 13px Geist,system-ui,sans-serif;color:#1d1824}.ds-input::placeholder{color:#675f73}.ds-input:focus{outline:none;border-color:#5b3fa8;box-shadow:0 0 0 3px rgba(91,63,168,.32)}"
+    },
+    {
+      "name": "Rail Nav Item", "kind": "nav", "refersTo": "nav-item",
+      "description": "Night rail item with active lilac marker.",
+      "html": "<div style=\"background:#130f1c;padding:12px;width:220px\"><a class=\"ds-nav\" aria-current=\"page\">Governance</a></div>",
+      "css": ".ds-nav{position:relative;display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:8px;color:#b9aed0;font:520 13px Geist,system-ui,sans-serif;cursor:pointer}.ds-nav:hover{background:#1d1829;color:#f1ecf8}.ds-nav[aria-current=page]{background:rgba(201,179,240,.14);color:#f1ecf8}.ds-nav[aria-current=page]::before{content:'';position:absolute;left:-12px;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;background:#c9b3f0}"
+    },
+    {
+      "name": "Value Marks", "kind": "custom", "refersTo": "badge",
+      "description": "Solid verified, hatched estimated, outlined unmeasured.",
+      "html": "<div class=\"ds-vm\"><span class=\"v\"></span>Verified <span class=\"e\"></span>Estimated <span class=\"u\"></span>Unmeasured</div>",
+      "css": ".ds-vm{font:13px Geist,system-ui,sans-serif;color:#1d1824}.ds-vm span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 6px 0 12px;vertical-align:-1px}.ds-vm .v{background:#5b3fa8}.ds-vm .e{background:repeating-linear-gradient(135deg,#9a82d4 0 2px,#e6def6 2px 4px);border:1px solid #9a82d4}.ds-vm .u{border:1.5px dashed #8a8296}"
+    },
+    {
+      "name": "Sequence Gutter Item", "kind": "custom", "refersTo": "card",
+      "description": "Signature: mono #seq column, status dot, event card.",
+      "html": "<div class=\"ds-tl\"><span class=\"seq\">#014</span><i></i><div><b>Decision stored</b><small>Authority at attempt: allowed</small></div></div>",
+      "css": ".ds-tl{display:grid;grid-template-columns:52px 18px 1fr;gap:8px;font-family:Geist,system-ui,sans-serif;color:#1d1824}.ds-tl .seq{text-align:right;padding-top:11px;font:12px 'Geist Mono',monospace;color:#675f73;font-variant-numeric:tabular-nums}.ds-tl i{width:12px;height:12px;margin:12px 0 0 3px;border-radius:50%;border:2px solid #5b3fa8;background:#fdfcf9}.ds-tl div{padding:8px 12px}.ds-tl b{display:block;font-size:13px;font-weight:560}.ds-tl small{font-size:12px;color:#473f55}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ledger Under Night",
+    "overview": "Accord is a restrained editorial workspace for running a hybrid human and AI workforce and proving what it was allowed to do. Warm stone ground and paper surfaces carry the working day; a single night violet-black rail anchors navigation, and one violet accent marks interaction and verified value. Hairline borders replace shadows, actions are pills, figures are tabular.\n\nCertainty is drawn: verified is solid violet, estimated is hatched, unmeasured is outlined. The signature move is the monospace #seq sequence gutter anchoring timelines, evidence and the event log. Geist is a user-pinned choice, with Geist Mono for identity and one Newsreader italic phrase for editorial voice.",
+    "keyCharacteristics": [
+      "Warm stone and paper neutrals with violet-tinted ink, never pure grey or white.",
+      "Night appears twice: the nav rail, and the Assure lane card on Overview.",
+      "Flat at rest; only overlays and the toast carry a shadow.",
+      "Solid / hatched / outlined encodes verified / estimated / unmeasured everywhere value appears.",
+      "Mono #seq gutter as the recurring structural device."
+    ],
+    "rules": [
+      { "name": "The Three Value Marks Rule", "body": "Verified is solid violet, estimated is hatched, unmeasured is outlined/dashed. Any new surface showing value uses these marks and never adds the three into one figure.", "section": "colors" },
+      { "name": "The Reserved Hue Rule", "body": "Violet is interaction and verified value; red/amber is severity and denial; green is allowed. No color is borrowed for decoration.", "section": "colors" },
+      { "name": "The Night Is Rare Rule", "body": "Night fills only the navigation rail, the Assure lane card, and the toast.", "section": "colors" },
+      { "name": "The One Italic Rule", "body": "Newsreader italic appears only for one accent phrase inside a page title and for empty-state titles. Nowhere else.", "section": "typography" },
+      { "name": "The Mono Means Identity Rule", "body": "If it is an id, scope or sequence number, it is Geist Mono, tabular, muted.", "section": "typography" },
+      { "name": "The Hairline Not Shadow Rule", "body": "A card never casts a shadow; it earns its edge with a 1px hairline.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do mark value with solid, hatched and outlined fills, and keep the three figures separate.",
+      "Do set every id, scope and sequence number in Geist Mono, tabular, ink-3.",
+      "Do use hairline borders on stone/paper and reserve shadows for dialogs, drawers and the toast.",
+      "Do use pill shapes for actions and 8/12/16px radii for containers.",
+      "Do keep violet for interaction and verified value, red/amber for severity, green for allowed.",
+      "Do put the single italic serif phrase in the page title and in empty-state titles only.",
+      "Do keep text pairs at WCAG AA using ink / ink-2 / ink-3; use ink-4 for non-text only."
+    ],
+    "donts": [
+      "Don't add or blend verified, estimated and unmeasured value into one number.",
+      "Don't use shadows or colored side stripes to lift cards.",
+      "Don't use night fills beyond the rail, the Assure card and the toast.",
+      "Don't reintroduce the generic blue-and-white dashboard look or a row of metric cards.",
+      "Don't use Newsreader for body, labels or numbers."
+    ]
+  }
+}

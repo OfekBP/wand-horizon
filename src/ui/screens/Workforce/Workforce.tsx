@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { classifyAiWorkers, filterWorkers, type WorkerFilter } from '../../../domain/selectors'
+import { classifyAiWorkers, filterWorkers, openConcerns, openConflicts, overviewMetrics, type WorkerFilter } from '../../../domain/selectors'
 import type { Worker } from '../../../domain/types'
 import { useNav } from '../../../state/nav'
 import { useApp } from '../../../state/store'
-import { money } from '../../format'
+import { money, pct } from '../../format'
 import { Badge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
 import { Icon } from '../../primitives/Icon'
@@ -18,7 +18,16 @@ const initials = (name: string) => name.split(/[\s-]+/).filter(Boolean).slice(0,
 export function Workforce() {
   const { state, index } = useApp()
   const { selectedId, go } = useNav()
-  const [filter, setFilter] = useState<WorkerFilter>({ q: '', kind: 'all', teamId: 'all', status: 'all' })
+  // The 500 AI workers are the registry's bulk, so they lead; people are one click away.
+  const [filter, setFilter] = useState<WorkerFilter>({ q: '', kind: 'ai', teamId: 'all', status: 'all', value: 'all' })
+  const metrics = useMemo(() => overviewMetrics(state), [state])
+  const summary = useMemo(() => {
+    const ai = state.workers.filter((w) => w.kind === 'ai')
+    const owners = new Set(ai.map((w) => w.ownerId).filter(Boolean)).size
+    const inConflict = new Set(openConflicts(state).flatMap((c) => [c.workerAId, c.workerBId])).size
+    const withConcern = new Set(openConcerns(state).map((c) => c.workerId)).size
+    return { owners, inConflict, withConcern }
+  }, [state])
   const [page, setPage] = useState(0)
 
   const patch = (p: Partial<WorkerFilter>) => {
@@ -37,7 +46,7 @@ export function Workforce() {
       key: 'name',
       header: 'Worker',
       render: (w) => (
-        <div className="who">
+        <div className="person">
           <span className={`avatar${w.kind === 'ai' ? ' avatar--ai' : ''}`} aria-hidden="true">
             {w.kind === 'ai' ? 'AI' : initials(w.name)}
           </span>
@@ -54,7 +63,7 @@ export function Workforce() {
       key: 'value',
       header: 'Value measurement',
       render: (w) => {
-        if (w.kind === 'human') return <span className="muted">Not applicable</span>
+        if (w.kind === 'human') return <span className="muted" aria-label="Not applicable to people">—</span>
         const c = classes.get(w.id)
         return (
           <span>
@@ -73,6 +82,11 @@ export function Workforce() {
   return (
     <div className="page">
       <PageHeader title="Workforce" subtitle={`${state.workers.filter((w) => w.kind === 'human').length} people and ${state.workers.filter((w) => w.kind === 'ai').length} AI workers. Every AI worker has an accountable human owner.`} />
+      <p className="small muted" style={{ marginTop: -8 }}>
+        <strong className="num">{metrics.aiWorkers}</strong> AI workers answer to <strong className="num">{summary.owners}</strong> accountable people ·{' '}
+        <strong className="num">{pct(metrics.coverage, 1)}</strong> have verified value · <strong className="num">{summary.inConflict}</strong> are in an open conflict ·{' '}
+        <strong className="num">{summary.withConcern}</strong> have an open performance concern.
+      </p>
       <Card flush>
         <div className="filters">
           <div className="search">
@@ -80,7 +94,7 @@ export function Workforce() {
             <input className="input" type="search" placeholder="Search name, role or ID" aria-label="Search workforce" value={filter.q} onChange={(e) => patch({ q: e.target.value })} />
           </div>
           <div className="seg" role="group" aria-label="Worker type">
-            {([['all', 'All'], ['human', 'People'], ['ai', 'AI workers']] as const).map(([k, label]) => (
+            {([['ai', 'AI workers'], ['human', 'People'], ['all', 'All']] as const).map(([k, label]) => (
               <button key={k} aria-pressed={filter.kind === k} onClick={() => patch({ kind: k })}>
                 {label}
               </button>
@@ -93,6 +107,12 @@ export function Workforce() {
                 {t.name}
               </option>
             ))}
+          </select>
+          <select className="select" aria-label="Value measurement" value={filter.value} onChange={(e) => patch({ value: e.target.value as WorkerFilter['value'] })}>
+            <option value="all">Any value measurement</option>
+            <option value="verified">Verified</option>
+            <option value="estimatedOnly">Estimated only</option>
+            <option value="unmeasured">Unmeasured</option>
           </select>
           <select className="select" aria-label="Status" value={filter.status} onChange={(e) => patch({ status: e.target.value as WorkerFilter['status'] })}>
             <option value="all">Any status</option>
@@ -124,3 +144,4 @@ export function Workforce() {
     </div>
   )
 }
+

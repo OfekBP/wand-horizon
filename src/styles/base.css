@@ -10,15 +10,27 @@ body,
   height: 100%;
 }
 
+html {
+  color-scheme: light;
+  accent-color: var(--accent);
+}
+
 body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--t-md);
-  line-height: 1.45;
+  line-height: 1.5;
+  font-feature-settings: 'tnum';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  caret-color: var(--accent);
+}
+
+::selection {
+  background: var(--accent-line);
+  color: var(--ink);
 }
 
 h1,
@@ -30,18 +42,30 @@ p {
 }
 
 h1 {
-  font-size: var(--t-xl);
-  font-weight: 650;
-  letter-spacing: -0.012em;
+  font-size: var(--t-2xl);
+  font-weight: 480;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  text-wrap: balance;
 }
 h2 {
   font-size: var(--t-lg);
-  font-weight: 620;
-  letter-spacing: -0.006em;
+  font-weight: 560;
+  letter-spacing: -0.015em;
 }
 h3 {
   font-size: var(--t-md);
-  font-weight: 600;
+  font-weight: 560;
+  letter-spacing: -0.005em;
+}
+
+/* the one place the italic serif lives in titles */
+.accent-phrase {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--accent);
 }
 
 button,
@@ -60,17 +84,27 @@ textarea {
 
 a {
   color: var(--accent);
+  text-underline-offset: 3px;
 }
 
 code,
 .mono {
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 0.9em;
+  letter-spacing: -0.01em;
+}
+
+/* the sequence gutter: ids and sequence numbers are always mono, tabular, and muted */
+.seq {
+  font-family: var(--font-mono);
+  font-size: var(--t-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+  letter-spacing: -0.01em;
 }
 
 .num {
   font-variant-numeric: tabular-nums;
-  font-feature-settings: 'tnum';
 }
 .muted {
   color: var(--ink-3);
@@ -82,7 +116,7 @@ code,
   font-size: var(--t-xs);
 }
 .strong {
-  font-weight: 600;
+  font-weight: 560;
 }
 .right {
   text-align: right;
@@ -96,6 +130,10 @@ code,
   white-space: nowrap;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

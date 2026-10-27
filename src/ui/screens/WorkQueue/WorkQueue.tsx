@@ -36,6 +36,11 @@ export function WorkQueue() {
         : open,
     [showResolved, state.conflicts, open],
   )
+  const lastSeq = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const e of state.events) if (e.operationId) m.set(e.operationId, e.seq)
+    return m
+  }, [state.events])
   const name = (id: string) => index.workerById.get(id)?.name ?? id
   const select = (id: string) => {
     setTab(tabFor(id) ?? chosenTab)
@@ -60,6 +65,7 @@ export function WorkQueue() {
     { key: 'owner', header: 'Decision owner', render: (o) => name(o.decisionOwnerId) },
     { key: 'wait', header: 'Waiting', align: 'right', render: (o) => age(o.awaitingSince ?? o.startedAt, state.clock) },
     { key: 'amount', header: 'Amount', align: 'right', render: (o) => money(o.amount) },
+    { key: 'seq', header: 'Last event', align: 'right', render: (o) => <span className="seq">#{lastSeq.get(o.id) ?? ''}</span> },
   ]
 
   const conflictColumns: Column<Conflict>[] = [
@@ -168,3 +174,4 @@ export function WorkQueue() {
     </div>
   )
 }
+

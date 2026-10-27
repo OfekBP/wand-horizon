@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { classifyAiWorkers } from '../../../domain/selectors'
-import type { Worker } from '../../../domain/types'
+import type { PermissionChangedEvent, Worker } from '../../../domain/types'
 import { useNav } from '../../../state/nav'
 import { useApp } from '../../../state/store'
+import { EventTimeline } from '../../audit/EventTimeline'
 import { money } from '../../format'
 import { Badge, StatusBadge } from '../../primitives/Badge'
 import { Button } from '../../primitives/Button'
@@ -23,6 +24,11 @@ export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () 
   const ops = state.operations.filter((o) => o.workerId === worker.id || o.decisionOwnerId === worker.id)
   const owned = state.workers.filter((w) => w.ownerId === worker.id)
   const concerns = state.concerns.filter((c) => c.workerId === worker.id && c.status === 'open')
+  const history = useMemo(
+    () => state.events.filter((e): e is PermissionChangedEvent => e.type === 'PermissionChanged' && e.workerId === worker.id).slice(-4),
+    [state.events, worker.id],
+  )
+  const totalChanges = state.events.filter((e) => e.type === 'PermissionChanged' && e.workerId === worker.id).length
 
   return (
     <>
@@ -99,6 +105,13 @@ export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () 
             </div>
             <div>
               <div className="section-label" style={{ marginBottom: 8 }}>
+                Permission history ({totalChanges})
+              </div>
+              <EventTimeline events={history} onSelect={(e) => go('governance', e.id)} />
+              {totalChanges > history.length && <div className="xs muted">Showing the latest {history.length}. Select an event to see the state before and after it.</div>}
+            </div>
+            <div>
+              <div className="section-label" style={{ marginBottom: 8 }}>
                 Value records (trailing 30 days)
               </div>
               {records.length === 0 ? (
@@ -123,7 +136,7 @@ export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () 
         {!isAi && owned.length > 0 && (
           <div>
             <div className="section-label" style={{ marginBottom: 8 }}>
-              {worker.kind === 'human' ? `Owns or manages (${owned.length})` : ''}
+              Owns or manages ({owned.length})
             </div>
             <ul className="mini-list">
               {owned.slice(0, 8).map((w) => (
@@ -142,7 +155,7 @@ export function WorkerDrawer({ worker, onClose }: { worker: Worker; onClose: () 
         {ops.length > 0 && (
           <div>
             <div className="section-label" style={{ marginBottom: 8 }}>
-              Operations ({ops.length})
+              Cases ({ops.length})
             </div>
             <ul className="mini-list">
               {ops.slice(0, 6).map((o) => (

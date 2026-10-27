@@ -1,10 +1,19 @@
 import type { ReactNode } from 'react'
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
+/** `accent` is one italic phrase appended to the title. Titles only: never in labels, tables or numbers. */
+export function PageHeader({ title, accent, subtitle, actions }: { title: string; accent?: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
     <header className="page__head">
       <div>
-        <h1>{title}</h1>
+        <h1>
+          {title}
+          {accent && (
+            <>
+              {' '}
+              <span className="accent-phrase">{accent}</span>
+            </>
+          )}
+        </h1>
         {subtitle && <p>{subtitle}</p>}
       </div>
       {actions}

@@ -89,3 +89,38 @@ export function describeEvent(e: AuditEvent, nameOf: (id: string) => string): Ev
       return { title: 'Execution prevented', tone: 'critical', lines: [REASON_LABEL[e.reasonCode], `Decision recorded in ${ref(e.evaluationEventId)}`] }
   }
 }
+
+export function scopeStateText(s: { active: boolean; limit?: number }, everGranted: boolean): string {
+  if (s.active) return `Active · ${s.limit !== undefined ? `limit ${usd(s.limit)}` : 'no limit'}`
+  return everGranted ? 'Revoked' : 'Never granted'
+}
+
+export interface EvidenceSummaryInput {
+  operationTitle: string
+  operationId: string
+  workerName: string
+  evaluation: Extract<AuditEvent, { type: 'AuthorizationEvaluated' }>
+  evidence: Array<{ seq: number; action: string }>
+  replayMatches: boolean
+  changedSince: Array<{ seq: number; action: string }>
+  todayDecision: string
+}
+
+/** Plain-text evidence an investigator can paste into a case file. Built only from stored records. */
+export function evidenceSummary(i: EvidenceSummaryInput): string {
+  const e = i.evaluation
+  const list = (xs: Array<{ seq: number; action: string }>) => (xs.length ? xs.map((x) => `#${x.seq} ${x.action}`).join(', ') : 'none')
+  return [
+    'AUTHORIZATION EVIDENCE (browser simulation, not production-grade security)',
+    `Operation: ${i.operationTitle} (${i.operationId})`,
+    `AI worker: ${i.workerName}`,
+    `Required authority: ${e.requiredScope} for ${usd(e.amount)}`,
+    `Stored decision: ${e.decision === 'allowed' ? 'Allowed' : 'Denied'} at event #${e.seq}, ${e.at}`,
+    `Reason: ${REASON_LABEL[e.reasonCode]}`,
+    `Permission state relied on: ${scopeStateText(e.scopeState, e.evidenceChangeIds.length > 0)}; permission events read up to #${e.cutoffSeq}`,
+    `Evidence (permission events): ${list(i.evidence)}`,
+    `Replay check: ${i.replayMatches ? 'recomputed from the log, matches the stored decision' : 'MISMATCH'}`,
+    `Recorded after this decision: ${list(i.changedSince)}${i.changedSince.length ? '. These do not alter the stored decision.' : ''}`,
+    `Same request today would be: ${i.todayDecision}`,
+  ].join('\n')
+}

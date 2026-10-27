@@ -60,12 +60,23 @@ export function DataTable<T>({ rows, columns, rowKey, onRowClick, selectedKey, e
                 key={key}
                 className={[onRowClick ? 'is-clickable' : '', selectedKey === key ? 'is-selected' : ''].join(' ')}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                onKeyDown={onRowClick ? (e) => (e.key === 'Enter' ? onRowClick(row) : undefined) : undefined}
-                tabIndex={onRowClick ? 0 : undefined}
               >
-                {columns.map((c) => (
+                {columns.map((c, i) => (
                   <td key={c.key} className={c.align === 'right' ? 'right num' : ''}>
-                    {c.render(row)}
+                    {/* the first cell holds a real button so keyboard and screen-reader users can open the row */}
+                    {onRowClick && i === 0 ? (
+                      <button
+                        className="cell-link"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRowClick(row)
+                        }}
+                      >
+                        {c.render(row)}
+                      </button>
+                    ) : (
+                      c.render(row)
+                    )}
                   </td>
                 ))}
               </tr>

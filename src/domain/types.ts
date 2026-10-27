@@ -181,5 +181,7 @@ export interface AppState {
   nextSeq: number
   /** Simulated clock (ISO). Never moves backwards. */
   clock: string
+  /** The clock when the demo was seeded; events after it are the user's own actions. */
+  seedClock: string
   actingAs: Actor
 }

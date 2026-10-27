@@ -1,10 +1,12 @@
+/* The sequence gutter: every event is anchored by its #seq in a monospace column. Order is by seq, never by time. */
 .tl { list-style: none; margin: 0; padding: 0; }
-.tl__item { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--s-3); position: relative; }
+.tl__item { display: grid; grid-template-columns: 52px 18px minmax(0, 1fr); gap: var(--s-2); position: relative; }
+.tl__seq { text-align: right; padding-top: 11px; }
 .tl__item::before {
   content: '';
   position: absolute;
-  left: 9px;
-  top: 22px;
+  left: calc(52px + var(--s-2) + 8px);
+  top: 24px;
   bottom: -4px;
   width: 2px;
   background: var(--line);
@@ -13,7 +15,7 @@
 .tl__dot {
   width: 12px;
   height: 12px;
-  margin: 12px 0 0 4px;
+  margin: 12px 0 0 3px;
   border-radius: 50%;
   border: 2px solid var(--ink-4);
   background: var(--surface);
@@ -34,12 +36,12 @@
   border: 1px solid transparent;
   border-radius: var(--r-sm);
 }
-button.tl__card { cursor: pointer; }
+button.tl__card { cursor: pointer; transition: background 0.18s var(--ease); }
 button.tl__card:hover { background: var(--surface-sunken); }
 button.tl__card:focus-visible { box-shadow: var(--ring); }
 .tl__card[aria-current='true'] { background: var(--accent-wash); border-color: var(--accent-line); }
 .tl__top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s-3); }
-.tl__title { font-weight: 600; font-size: var(--t-sm); }
+.tl__title { font-weight: 560; font-size: var(--t-sm); }
 .tl__meta { font-size: var(--t-xs); color: var(--ink-3); white-space: nowrap; }
 .tl__lines { margin-top: 2px; font-size: var(--t-xs); color: var(--ink-2); display: grid; gap: 1px; }
 .tl__tag {
@@ -48,7 +50,7 @@ button.tl__card:focus-visible { box-shadow: var(--ring); }
   font-size: var(--t-xs);
   color: var(--ink-3);
   border: 1px dashed var(--line-strong);
-  border-radius: 999px;
+  border-radius: var(--pill);
   padding: 0 8px;
 }
-.tl__item--after .tl__card { opacity: 0.82; }
+.tl__item--after .tl__card { opacity: 0.85; }

@@ -20,7 +20,7 @@
 .seg button[aria-pressed='true'] { background: var(--accent-wash); color: var(--accent); }
 .seg button:focus-visible { box-shadow: inset var(--ring); }
 
-.who { display: flex; align-items: center; gap: var(--s-3); min-width: 0; }
+.person { display: flex; align-items: center; gap: var(--s-3); min-width: 0; text-align: left; }
 .avatar {
   flex: none;
   width: 28px;
@@ -51,3 +51,4 @@
 .mini-list .link:focus-visible { box-shadow: var(--ring); }
 .inline { display: flex; gap: var(--s-3); }
 .inline > * { flex: 1; }
+

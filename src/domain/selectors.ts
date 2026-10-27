@@ -1,10 +1,14 @@
-import { permissionChangesAsOf } from './authorize'
+import { authorize, isPermissionChange, permissionChangesAsOf, replayMatches, type AuthorizationResult } from './authorize'
 import type {
   AppState,
   AuditEvent,
+  AuthorizationEvaluatedEvent,
   Conflict,
   Operation,
   PerformanceConcern,
+  PermissionChangedEvent,
+  ReasonCode,
+  ScopeState,
   Severity,
   Team,
   Worker,
@@ -191,12 +195,16 @@ export interface WorkerFilter {
   kind: 'all' | 'human' | 'ai'
   teamId: string
   status: 'all' | 'active' | 'paused'
+  /** Value measurement class of AI workers. Anything other than 'all' leaves out people. */
+  value: 'all' | ValueClass
 }
 
 export function filterWorkers(state: AppState, f: WorkerFilter): Worker[] {
   const q = f.q.trim().toLowerCase()
+  const classes = f.value === 'all' ? null : classifyAiWorkers(state)
   return state.workers.filter(
     (w) =>
+      (classes === null || classes.get(w.id) === f.value) &&
       (f.kind === 'all' || w.kind === f.kind) &&
       (f.teamId === 'all' || w.teamId === f.teamId) &&
       (f.status === 'all' || w.status === f.status) &&
@@ -222,4 +230,161 @@ export function operationTimeline(state: AppState, op: Operation): AuditEvent[] 
 export function operationOutcomeSeq(events: AuditEvent[]): number | null {
   const out = events.find((e) => e.type === 'OperationExecuted' || e.type === 'ExecutionPrevented')
   return out ? out.seq : null
+}
+
+/* ---------- cases: the operation as both a managed object and a record to prove ---------- */
+
+/** Short reason wording for dense rows. The full wording lives in audit.ts. */
+export const REASON_SHORT: Record<ReasonCode, string> = {
+  ACTIVE_GRANT: 'Active grant',
+  NO_GRANT: 'Never granted',
+  REVOKED: 'Revoked',
+  LIMIT_EXCEEDED: 'Limit exceeded',
+}
+
+const isEvaluation = (e: AuditEvent): e is AuthorizationEvaluatedEvent => e.type === 'AuthorizationEvaluated'
+const MAX_SEQ = Number.MAX_SAFE_INTEGER
+
+export interface CaseRow {
+  op: Operation
+  /** The stored execution-time decision, if the operation has been attempted. */
+  evaluation?: AuthorizationEvaluatedEvent
+  /** Permission changes for this worker and scope recorded after the operation started. */
+  changedDuringCase: PermissionChangedEvent[]
+  /** For in-progress operations: what authorization would say if it ran right now. Not a recorded decision. */
+  liveDecision?: AuthorizationResult
+  /** One line for dense rows: the authority story of this case. */
+  authorityNote: string
+}
+
+export function caseRows(state: AppState): CaseRow[] {
+  const latest = state.nextSeq - 1
+  const startSeq = new Map<string, number>()
+  const evalByOp = new Map<string, AuthorizationEvaluatedEvent>()
+  const changesByKey = new Map<string, PermissionChangedEvent[]>()
+  for (const e of state.events) {
+    if (e.type === 'OperationStarted' && e.operationId) startSeq.set(e.operationId, e.seq)
+    else if (isEvaluation(e) && e.operationId) evalByOp.set(e.operationId, e)
+    else if (isPermissionChange(e) && e.workerId) {
+      const key = `${e.workerId}|${e.scope}`
+      changesByKey.set(key, [...(changesByKey.get(key) ?? []), e])
+    }
+  }
+  return state.operations.map((op) => {
+    const evaluation = evalByOp.get(op.id)
+    const from = startSeq.get(op.id) ?? 0
+    const changedDuringCase = (changesByKey.get(`${op.workerId}|${op.requiredScope}`) ?? []).filter((c) => c.seq > from)
+    let liveDecision: AuthorizationResult | undefined
+    let authorityNote: string
+    if (evaluation) {
+      authorityNote = `${evaluation.decision === 'allowed' ? 'Allowed' : 'Denied'} · ${REASON_SHORT[evaluation.reasonCode]} · decided at #${evaluation.seq}`
+    } else if (op.status === 'in_progress') {
+      liveDecision = authorize(state.events, { workerId: op.workerId, requiredScope: op.requiredScope, amount: op.amount }, latest)
+      authorityNote =
+        liveDecision.decision === 'allowed'
+          ? 'Would be allowed if run now'
+          : `Would be denied if run now · ${REASON_SHORT[liveDecision.reasonCode]}`
+    } else {
+      authorityNote = 'Waiting on a human decision. Not executable.'
+    }
+    return { op, evaluation, changedDuringCase, liveDecision, authorityNote }
+  })
+}
+
+/** In-progress operations whose authority would be denied if they ran now. Derived, never stored. */
+export function authorityAtRisk(state: AppState): CaseRow[] {
+  return caseRows(state)
+    .filter((r) => r.op.status === 'in_progress' && r.liveDecision?.decision === 'denied')
+    .sort((a, b) => SEVERITY_RANK[a.op.severity] - SEVERITY_RANK[b.op.severity] || b.op.amount - a.op.amount)
+}
+
+export type CaseSegment = 'all' | 'prevented' | 'changed' | 'executed' | 'open'
+
+export function inSegment(row: CaseRow, segment: CaseSegment): boolean {
+  switch (segment) {
+    case 'all':
+      return true
+    case 'prevented':
+      return row.op.status === 'prevented'
+    case 'executed':
+      return row.op.status === 'executed'
+    case 'open':
+      return row.op.status === 'in_progress' || row.op.status === 'awaiting_approval'
+    case 'changed':
+      return row.changedDuringCase.length > 0
+  }
+}
+
+export interface ThenVsNow {
+  stored: AuthorizationEvaluatedEvent
+  /** Permission for the same worker and scope as of the latest event. */
+  live: ScopeState
+  /** What the same request would get today. */
+  today: AuthorizationResult
+  /** Permission changes recorded after the stored decision's cutoff. */
+  changedSince: PermissionChangedEvent[]
+}
+
+/** The stored execution-time decision beside today's permission. The stored decision is never recomputed. */
+export function thenVsNow(state: AppState, stored: AuthorizationEvaluatedEvent): ThenVsNow {
+  const workerId = stored.workerId ?? ''
+  const today = authorize(state.events, { workerId, requiredScope: stored.requiredScope, amount: stored.amount }, state.nextSeq - 1)
+  const changedSince = permissionChangesAsOf(state.events, workerId, MAX_SEQ, stored.requiredScope).filter((c) => c.seq > stored.cutoffSeq)
+  return { stored, live: today.scopeState, today, changedSince }
+}
+
+export interface GovernanceStats {
+  attempts: number
+  allowed: number
+  denied: number
+  deniedByReason: Record<ReasonCode, number>
+  permissionChanges: number
+  replayVerified: number
+}
+
+/** Counts from the event log for decisions and permission changes recorded since `sinceIso`. */
+export function governanceStats(state: AppState, sinceIso: string): GovernanceStats {
+  const since = Date.parse(sinceIso)
+  const evals = state.events.filter(isEvaluation).filter((e) => Date.parse(e.at) >= since)
+  const deniedByReason: Record<ReasonCode, number> = { ACTIVE_GRANT: 0, NO_GRANT: 0, REVOKED: 0, LIMIT_EXCEEDED: 0 }
+  for (const e of evals) if (e.decision === 'denied') deniedByReason[e.reasonCode]++
+  return {
+    attempts: evals.length,
+    allowed: evals.filter((e) => e.decision === 'allowed').length,
+    denied: evals.filter((e) => e.decision === 'denied').length,
+    deniedByReason,
+    permissionChanges: state.events.filter(isPermissionChange).filter((e) => Date.parse(e.at) >= since).length,
+    replayVerified: evals.filter((e) => replayMatches(state.events, e)).length,
+  }
+}
+
+export interface Scenario {
+  key: 'reassign' | 'resolve' | 'permission' | 'history'
+  title: string
+  done: boolean
+}
+
+/** Scenario progress is derived from real events recorded after the demo's seed. Nothing is stored. */
+export function scenarioProgress(state: AppState): Scenario[] {
+  const after = state.events.filter((e) => e.seq > seedSeq(state))
+  const changes = after.filter(isPermissionChange)
+  const evals = after.filter(isEvaluation)
+  const reassigned = after.some((e) => e.type === 'OwnerReassigned')
+  const resolved = after.some((e) => e.type === 'ConflictResolved')
+  const permissionThenRun = evals.some((ev) => changes.some((c) => c.seq < ev.seq))
+  const decisionHolds = evals.some((ev) => changes.some((c) => c.seq > ev.seq && c.workerId === ev.workerId && c.scope === ev.requiredScope))
+  return [
+    { key: 'reassign', title: 'Reassign a blocked decision', done: reassigned },
+    { key: 'resolve', title: 'Resolve a conflict', done: resolved },
+    { key: 'permission', title: 'Change a permission, then run the operation', done: permissionThenRun },
+    { key: 'history', title: 'Change it again after execution and see the stored decision hold', done: decisionHolds },
+  ]
+}
+
+/** The last event that existed when the demo was seeded. */
+function seedSeq(state: AppState): number {
+  const seed = Date.parse(state.seedClock)
+  let last = 0
+  for (const e of state.events) if (Date.parse(e.at) <= seed) last = e.seq
+  return last
 }

@@ -29,10 +29,11 @@ describe('Flow A: reassign a pending human decision', () => {
     expect(within(drawer).getByText('Awaiting approval')).toBeInTheDocument()
 
     await user.click(within(drawer).getByRole('button', { name: 'Reassign decision' }))
-    const dialog = await screen.findByRole('dialog', { name: 'Reassign pending decision' })
-    await user.selectOptions(within(dialog).getByLabelText('New decision owner'), workerId('Ingrid Novak'))
-    await user.type(within(dialog).getByLabelText('Reason'), 'Elena is out of office')
-    await user.click(within(dialog).getByRole('button', { name: 'Reassign decision' }))
+    // inline in the drawer: no modal for a task that needs no interruption
+    const form = await within(drawer).findByRole('form', { name: 'Reassign pending decision' })
+    await user.selectOptions(within(form).getByLabelText('New decision owner'), workerId('Ingrid Novak'))
+    await user.type(within(form).getByLabelText('Reason'), 'Elena is out of office')
+    await user.click(within(form).getByRole('button', { name: 'Confirm reassignment' }))
 
     // owner changed, status unchanged
     const updated = await screen.findByRole('dialog', { name: /SB-2291/ })
@@ -87,10 +88,11 @@ describe('Flows C and D: permission change mid-flight, then reconstruct', () => 
     await goTo('#/governance/op-c1')
     await user.click(await screen.findByRole('button', { name: 'Run execution step' }))
 
-    expect(await screen.findByText(/Authorization was not valid when the action was attempted/)).toBeInTheDocument()
+    expect(await screen.findByText(/The action did not run\./)).toBeInTheDocument()
+    expect((await screen.findAllByText('Denied')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Authorization denied').length).toBeGreaterThan(0)
     expect(screen.getByText('Execution prevented')).toBeInTheDocument()
-    expect(screen.getByText('Matches')).toBeInTheDocument()
+    expect(screen.getByText('Verified')).toBeInTheDocument()
     expect(screen.getAllByText('Revoked').length).toBeGreaterThan(0)
   })
 
@@ -104,15 +106,64 @@ describe('Flows C and D: permission change mid-flight, then reconstruct', () => 
 
   it('reconstructs a historical state: later revocation does not change an earlier executed outcome', async () => {
     await open('#/governance/op-d2')
-    expect(await screen.findByText(/Authorization was valid when the action ran/)).toBeInTheDocument()
+    expect(await screen.findByText(/The action ran\./)).toBeInTheDocument()
     expect(screen.getAllByText('Authorization allowed').length).toBeGreaterThan(0)
     expect(screen.getByText('Recorded after the outcome. It does not change it.')).toBeInTheDocument()
-    expect(screen.getByText('Matches')).toBeInTheDocument()
+    expect(screen.getByText('Verified')).toBeInTheDocument()
+    // then versus now: stored as allowed, and the later revocation is named but does not rewrite it
+    expect(screen.getByText('This decision stands.')).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Then and now' })).toHaveTextContent('would be denied')
   })
 
   it('shows a limit-exceeded denial with the lowered limit as evidence', async () => {
     await open('#/governance/op-d3')
-    expect(await screen.findByText('The amount exceeds the permitted limit', { selector: 'dd' })).toBeInTheDocument()
-    expect(screen.getByText(/Active · limit \$100,000/, { selector: 'dd' })).toBeInTheDocument()
+    expect((await screen.findAllByText('The amount exceeds the permitted limit')).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Active · limit \$100,000/).length).toBeGreaterThan(0)
+  })
+})
+
+describe('One product, two missions', () => {
+  it('Overview shows authority at risk and moves when a permission is revoked mid-flight', async () => {
+    const user = userEvent.setup()
+    await open('#/overview')
+    expect(await screen.findByText('Authority at risk · 1')).toBeInTheDocument()
+
+    await goTo(`#/workforce/${workerId('Payments-Disburse-003')}`)
+    const drawer = await screen.findByRole('dialog', { name: 'Payments-Disburse-003' })
+    await user.click(within(drawer).getByRole('button', { name: 'Change permissions' }))
+    const dialog = await screen.findByRole('dialog', { name: 'Change permissions' })
+    await user.click(within(dialog).getByRole('radio', { name: 'Revoke' }))
+    await user.type(within(dialog).getByLabelText('Reason'), 'Beneficiary flagged')
+    await user.click(within(dialog).getByRole('button', { name: 'Revoke' }))
+
+    await goTo('#/overview')
+    expect(await screen.findByText('Authority at risk · 2')).toBeInTheDocument()
+  })
+
+  it('a case keeps its thread: from the Overview into evidence and back', async () => {
+    const user = userEvent.setup()
+    await open('#/overview')
+    await user.click(await screen.findByRole('button', { name: /Open the evidence for Post ledger adjustment ADJ-4417/ }))
+    expect(await screen.findByRole('heading', { name: /ADJ-4417/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Back to Overview' }))
+    expect(await screen.findByText('Authority at risk · 1')).toBeInTheDocument()
+  })
+
+  it('scenarios tick from real events', async () => {
+    const user = userEvent.setup()
+    await open('#/queue/c-001')
+    const drawer = await screen.findByRole('dialog', { name: /Intraday liquidity buffer/ })
+    await user.click(within(drawer).getByRole('radio', { name: /Liquidity-Forecast-005/ }))
+    await user.type(within(drawer).getByLabelText('Resolution note'), 'Liquidity owns the buffer')
+    await user.click(within(drawer).getByRole('button', { name: 'Resolve conflict' }))
+    await goTo('#/overview')
+    expect(await screen.findByText(/Resolve a conflict/)).toBeInTheDocument()
+    expect(screen.getByText('(done)')).toBeInTheDocument()
+  })
+
+  it('Governance opens on the cases where authority changed, not on a flat list', async () => {
+    await open('#/governance')
+    expect(await screen.findByRole('button', { name: /Authority changed/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/Wire \$120,000 to Northwind Escrow/)).toBeInTheDocument()
   })
 })

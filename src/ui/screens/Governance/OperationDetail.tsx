@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { REASON_LABEL } from '../../../domain/audit'
+import { evidenceSummary, REASON_LABEL, scopeStateText } from '../../../domain/audit'
 import { replayMatches, scopeStateAsOf } from '../../../domain/authorize'
 import { SCOPES } from '../../../domain/reducer'
-import { operationOutcomeSeq, operationTimeline } from '../../../domain/selectors'
-import type { AuditEvent, AuthorizationEvaluatedEvent, Operation } from '../../../domain/types'
+import { openConflicts, operationOutcomeSeq, operationTimeline, thenVsNow } from '../../../domain/selectors'
+import type { AuditEvent, AuthorizationEvaluatedEvent, Operation, ScopeState } from '../../../domain/types'
 import { useNav } from '../../../state/nav'
 import { useApp } from '../../../state/store'
 import { EventTimeline } from '../../audit/EventTimeline'
@@ -16,6 +16,10 @@ import { PermissionsList } from '../Workforce/PermissionsList'
 import './governance.css'
 
 const isEval = (e: AuditEvent | undefined): e is AuthorizationEvaluatedEvent => e?.type === 'AuthorizationEvaluated'
+
+function StateLine({ state, granted }: { state: ScopeState; granted: boolean }) {
+  return <span className="strong">{scopeStateText(state, granted)}</span>
+}
 
 export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; initialSeq?: number; onBack: () => void }) {
   const { state, index, act } = useApp()
@@ -31,10 +35,14 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
 
   const worker = index.workerById.get(op.workerId)
   const owner = index.workerById.get(op.decisionOwnerId)
-  const nameOfEvent = (id: string) => timeline.find((e) => e.id === id)
+  const eventBySeq = (id: string) => timeline.find((e) => e.id === id)
+  const conflicts = openConflicts(state).filter((c) => c.workerAId === op.workerId || c.workerBId === op.workerId)
+  const concerns = state.concerns.filter((c) => c.workerId === op.workerId && c.status === 'open')
 
   const cutoff = isEval(selected) ? selected.cutoffSeq : selected?.seq ?? state.nextSeq - 1
-  const live = scopeStateAsOf(state.events, op.workerId, op.requiredScope, state.nextSeq - 1).state
+  const live = scopeStateAsOf(state.events, op.workerId, op.requiredScope, state.nextSeq - 1)
+  const verdict = isEval(selected) ? thenVsNow(state, selected) : null
+  const replayOk = isEval(selected) ? replayMatches(state.events, selected) : false
 
   const run = () => {
     const r = act({ type: 'ATTEMPT_EXECUTION', operationId: op.id })
@@ -49,11 +57,34 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
     )
   }
 
+  const copy = async () => {
+    if (!isEval(selected) || !verdict) return
+    const text = evidenceSummary({
+      operationTitle: op.title,
+      operationId: op.id,
+      workerName: worker?.name ?? op.workerId,
+      evaluation: selected,
+      evidence: selected.evidenceChangeIds.map((id) => {
+        const ev = eventBySeq(id)
+        return { seq: ev?.seq ?? 0, action: ev?.type === 'PermissionChanged' ? ev.action : 'change' }
+      }),
+      replayMatches: replayOk,
+      changedSince: verdict.changedSince.map((c) => ({ seq: c.seq, action: c.action })),
+      todayDecision: `${verdict.today.decision === 'allowed' ? 'Allowed' : 'Denied'} (${REASON_LABEL[verdict.today.reasonCode].toLowerCase()})`,
+    })
+    try {
+      await navigator.clipboard.writeText(text)
+      notify('Evidence summary copied.')
+    } catch {
+      notify('Copy was blocked by the browser. Select the text in the panel instead.')
+    }
+  }
+
   return (
     <div className="page">
       <div className="gov-head">
         <button className="crumb" onClick={onBack}>
-          <Icon name="arrow" size={14} /> All operations
+          <Icon name="arrow" size={14} /> All cases
         </button>
         <div className="title-row">
           <h1>{op.title}</h1>
@@ -75,7 +106,10 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
           </div>
           <div>
             <dt>Decision owner</dt>
-            <dd>{owner?.name}</dd>
+            <dd>
+              {owner?.name}
+              <div className="xs muted">{owner?.role}</div>
+            </dd>
           </div>
           <div>
             <dt>Amount at stake</dt>
@@ -85,12 +119,37 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
             <dt>Authority required</dt>
             <dd>
               {SCOPES[op.requiredScope]}
-              <div className="xs muted mono">{op.requiredScope}</div>
+              <div className="seq">{op.requiredScope}</div>
             </dd>
           </div>
           <div>
             <dt>Started</dt>
             <dd>{dateTime(op.startedAt)}</dd>
+          </div>
+          <div>
+            <dt>Operational context</dt>
+            <dd>
+              {op.status === 'awaiting_approval' ? (
+                <button className="link" onClick={() => go('queue', op.id)}>
+                  Blocked in the Work Queue
+                </button>
+              ) : (
+                <span className="muted">Not blocked</span>
+              )}
+              <div className="xs">
+                {conflicts.length > 0 ? (
+                  <button className="link" onClick={() => go('queue', conflicts[0].id)}>
+                    {conflicts.length} open {conflicts.length === 1 ? 'conflict' : 'conflicts'}
+                  </button>
+                ) : (
+                  <span className="muted">No open conflicts</span>
+                )}
+                {' · '}
+                <span className={concerns.length ? 'strong' : 'muted'}>
+                  {concerns.length} {concerns.length === 1 ? 'concern' : 'concerns'}
+                </span>
+              </div>
+            </dd>
           </div>
         </dl>
       </Card>
@@ -98,10 +157,10 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
       {op.status === 'in_progress' && (
         <div className="alert alert--info policy">
           <div style={{ flex: 1 }}>
-            <strong>Execution is pending.</strong> Running the execution step judges authorization at this moment, using the permissions in force right now.
+            <strong>Execution is pending.</strong> Running the step judges authorization at this moment and stores the decision.
             <div className="xs" style={{ marginTop: 4 }}>
-              Current permission for this scope (not a recorded decision):{' '}
-              {live.active ? `active · ${live.limit !== undefined ? `limit ${money(live.limit)}` : 'no limit'}` : 'not active'}.
+              Permission right now (a live reading, not a stored decision): <strong>{scopeStateText(live.state, live.evidence.length > 0)}</strong>
+              {live.state.active && live.state.limit !== undefined && op.amount > live.state.limit ? ` · the ${money(op.amount)} amount exceeds it.` : '.'}
             </div>
           </div>
           <Button variant="primary" onClick={run}>
@@ -112,23 +171,10 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
       {op.status === 'awaiting_approval' && (
         <div className="alert alert--warn policy">
           <div style={{ flex: 1 }}>
-            <strong>Awaiting a human decision.</strong> This operation cannot be executed. The prototype does not simulate the approval step; it demonstrates permission
-            changes ahead of an execution attempt.
+            <strong>Awaiting a human decision.</strong> This operation cannot be executed. The prototype does not simulate the approval step; it shows permission changes ahead of an
+            execution attempt.
           </div>
           <Button onClick={() => go('queue', op.id)}>Open in Work Queue</Button>
-        </div>
-      )}
-      {(op.status === 'executed' || op.status === 'prevented') && (
-        <div className={`alert ${op.status === 'executed' ? 'alert--info' : 'alert--error'}`}>
-          {op.status === 'executed' ? (
-            <>
-              <strong>Executed.</strong> Authorization was valid when the action ran. Later permission changes do not alter this outcome.
-            </>
-          ) : (
-            <>
-              <strong>Prevented.</strong> Authorization was not valid when the action was attempted, so it did not run.
-            </>
-          )}
         </div>
       )}
       {error && (
@@ -138,90 +184,119 @@ export function OperationDetail({ op, initialSeq, onBack }: { op: Operation; ini
       )}
 
       <div className="gov-grid">
-        <Card title="Event sequence" subtitle="Ordered by sequence number. Select an event to reconstruct the permission state." flush>
+        <Card title="What was recorded" subtitle="In order of record. Select an event to rebuild the permission state at that point." flush>
           <div style={{ padding: 'var(--s-2) var(--s-4) var(--s-4)' }}>
             <EventTimeline events={timeline} afterSeq={outcomeSeq} selectedSeq={selected?.seq} onSelect={(e) => setPickedSeq(e.seq)} />
           </div>
         </Card>
 
         <div className="gov-side">
-          {isEval(selected) ? (
-            <Card
-              title={selected.decision === 'allowed' ? 'Authorization allowed' : 'Authorization denied'}
-              subtitle="The decision as recorded at the moment of execution."
-            >
-              <dl className="decision-grid">
-                <dt>Outcome</dt>
-                <dd>
-                  <Badge tone={selected.decision === 'allowed' ? 'ok' : 'critical'} dot>
-                    {selected.decision === 'allowed' ? 'Allowed' : 'Denied'}
-                  </Badge>
-                </dd>
-                <dt>Reason</dt>
-                <dd>{REASON_LABEL[selected.reasonCode]}</dd>
-                <dt>Evaluated</dt>
-                <dd className="num">
-                  {dateTime(selected.at)} · event #{selected.seq}
-                </dd>
-                <dt>Amount</dt>
-                <dd className="num">{money(selected.amount)}</dd>
-                <dt>State relied on</dt>
-                <dd>
-                  {selected.scopeState.active
-                    ? `Active · ${selected.scopeState.limit !== undefined ? `limit ${money(selected.scopeState.limit)}` : 'no limit'}`
-                    : selected.evidenceChangeIds.length === 0
-                      ? 'Never granted'
-                      : 'Revoked'}
-                </dd>
-                <dt>Read events up to</dt>
-                <dd className="num">#{selected.cutoffSeq}</dd>
-                <dt>Evidence</dt>
-                <dd>
-                  {selected.evidenceChangeIds.length === 0 ? (
-                    <span className="muted">No permission events exist for this scope.</span>
-                  ) : (
-                    <div className="chips">
-                      {selected.evidenceChangeIds.map((id) => {
-                        const ev = nameOfEvent(id)
-                        return (
-                          <button key={id} className="chip" onClick={() => ev && setPickedSeq(ev.seq)}>
-                            #{ev?.seq} {ev?.type === 'PermissionChanged' ? ev.action : ''}
-                          </button>
-                        )
-                      })}
+          {isEval(selected) && verdict ? (
+            <Card flush>
+              <div className="verdict">
+                <div className="verdict__head">
+                  <div>
+                    <div className={`verdict__word verdict__word--${selected.decision}`}>{selected.decision === 'allowed' ? 'Allowed' : 'Denied'}</div>
+                    <div className="verdict__reason">{REASON_LABEL[selected.reasonCode]}</div>
+                  </div>
+                  <Button size="sm" onClick={copy}>
+                    Copy evidence summary
+                  </Button>
+                </div>
+                <p className="xs muted">
+                  {op.status === 'executed' ? 'The action ran. ' : 'The action did not run. '}
+                  Stored at execution time as event <span className="seq">#{selected.seq}</span>, {dateTime(selected.at)}, for {money(selected.amount)}.
+                </p>
+
+                <div className="tvn" role="group" aria-label="Then and now">
+                  <div className="tvn__col">
+                    <div className="section-label">Then</div>
+                    <div className="tvn__state">
+                      <StateLine state={selected.scopeState} granted={selected.evidenceChangeIds.length > 0} />
                     </div>
-                  )}
-                </dd>
-                <dt>Replay check</dt>
-                <dd>
-                  {replayMatches(state.events, selected) ? (
-                    <span className="verify">
+                    <div className="xs muted">
+                      Log position <span className="seq">#{selected.cutoffSeq}</span>. The permission this decision relied on.
+                    </div>
+                  </div>
+                  <div className="tvn__col">
+                    <div className="section-label">Now</div>
+                    <div className="tvn__state">
+                      <StateLine state={verdict.live} granted={verdict.today.evidenceChangeIds.length > 0} />
+                    </div>
+                    <div className="xs muted">
+                      Log position <span className="seq">#{state.nextSeq - 1}</span>. The same request today would be{' '}
+                      <strong>{verdict.today.decision === 'allowed' ? 'allowed' : 'denied'}</strong>.
+                    </div>
+                  </div>
+                </div>
+
+                {verdict.changedSince.length === 0 ? (
+                  <div className="alert alert--ok xs">No permission change was recorded after this decision. Today's permission agrees with it.</div>
+                ) : (
+                  <div className="alert alert--info xs standing">
+                    <div>
+                      <strong>This decision stands.</strong> {verdict.changedSince.length} permission{' '}
+                      {verdict.changedSince.length === 1 ? 'change was' : 'changes were'} recorded after it. They never rewrite what was recorded.
+                    </div>
+                    <div className="chips">
+                      {verdict.changedSince.map((c) => (
+                        <button key={c.id} className="chip" onClick={() => setPickedSeq(c.seq)}>
+                          #{c.seq} {c.action}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="verdict__proof">
+                  <div>
+                    <div className="section-label">Evidence relied on</div>
+                    {selected.evidenceChangeIds.length === 0 ? (
+                      <div className="xs muted">No permission event exists for this scope.</div>
+                    ) : (
+                      <div className="chips">
+                        {selected.evidenceChangeIds.map((id) => {
+                          const ev = eventBySeq(id)
+                          return (
+                            <button key={id} className="chip" onClick={() => ev && setPickedSeq(ev.seq)}>
+                              #{ev?.seq} {ev?.type === 'PermissionChanged' ? ev.action : ''}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div className="section-label">Replay check</div>
+                    {replayOk ? (
                       <Badge tone="ok" dot>
-                        Matches
+                        Verified
                       </Badge>
-                      <span className="xs muted">Recomputed from the log, identical to the record.</span>
-                    </span>
-                  ) : (
-                    <Badge tone="critical" dot>
-                      Mismatch
-                    </Badge>
-                  )}
-                </dd>
-              </dl>
+                    ) : (
+                      <Badge tone="critical" dot>
+                        Mismatch
+                      </Badge>
+                    )}
+                    <div className="xs muted" style={{ marginTop: 4 }}>
+                      Recomputed from the log, identical to the record.
+                    </div>
+                  </div>
+                </div>
+              </div>
             </Card>
           ) : (
-            <Card title="Authorization decision" subtitle="Select an authorization event in the sequence to see what it relied on.">
+            <Card title="Authorization decision" subtitle="Select an authorization event to see what it relied on, and how today differs.">
               {lastEval ? (
                 <Button onClick={() => setPickedSeq(lastEval.seq)}>Jump to the decision</Button>
               ) : (
-                <div className="small muted">No execution has been attempted yet, so there is no decision to reconstruct.</div>
+                <div className="small muted">No execution has been attempted yet, so there is no stored decision. The permission readings above are live, not recorded.</div>
               )}
             </Card>
           )}
 
           <Card
-            title={isEval(selected) ? `Permissions this decision relied on` : `Permissions at event #${selected?.seq}`}
-            subtitle={`${worker?.name} · reconstructed from permission events up to #${cutoff}. Later changes are not applied.`}
+            title={isEval(selected) ? 'Permissions at the time' : `Permissions at event #${selected?.seq}`}
+            subtitle={`${worker?.name}, rebuilt from permission events up to #${cutoff}. Later changes are not applied.`}
           >
             <PermissionsList
               events={state.events}

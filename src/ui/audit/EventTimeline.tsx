@@ -28,9 +28,7 @@ export function EventTimeline({ events, afterSeq, selectedSeq, onSelect }: Props
           <>
             <div className="tl__top">
               <span className="tl__title">{v.title}</span>
-              <span className="tl__meta num">
-                #{e.seq} · {dateTime(e.at)}
-              </span>
+              <span className="tl__meta num">{dateTime(e.at)}</span>
             </div>
             <div className="tl__lines">
               <span>By {e.actor}</span>
@@ -43,6 +41,9 @@ export function EventTimeline({ events, afterSeq, selectedSeq, onSelect }: Props
         )
         return (
           <li key={e.id} className={`tl__item tl__item--${v.tone}${after ? ' tl__item--after' : ''}`}>
+            <span className="tl__seq seq" title="Sequence number: the order of record">
+              #{e.seq}
+            </span>
             <span className="tl__dot" aria-hidden="true" />
             {onSelect ? (
               <button className="tl__card" aria-current={selectedSeq === e.seq} onClick={() => onSelect(e)}>

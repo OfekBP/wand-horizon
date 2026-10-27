@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .claude/
+
+.impeccable/review/
+.impeccable/live/
