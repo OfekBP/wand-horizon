@@ -1,5 +1,5 @@
 ---
-name: Accord
+name: Wand Horizon
 description: A warm-stone workspace with a night-violet rail, where operations are managed and proven; value certainty is drawn, not just labelled.
 colors:
   accent-violet: "#5b3fa8"
@@ -152,13 +152,13 @@ components:
     width: "580px"
 ---
 
-# Design System: Accord
+# Design System: Wand Horizon
 
 ## Overview
 
 **Creative North Star: "The Ledger Under Night"**
 
-Accord is a restrained editorial workspace for running a hybrid human and AI workforce and proving what it was allowed to do. Warm stone ground and paper surfaces carry the working day; a single night violet-black rail anchors navigation, and one violet accent marks interaction and verified value. The build was redesigned from a generic blue-and-white dashboard, and the replacement is deliberately quiet: hairline borders instead of shadows, pill buttons, tabular figures, almost no ornament.
+Wand Horizon is a restrained editorial workspace for running a hybrid human and AI workforce and proving what it was allowed to do. Warm stone ground and paper surfaces carry the working day; a single night violet-black rail anchors navigation, and one violet accent marks interaction and verified value. The build was redesigned from a generic blue-and-white dashboard, and the replacement is deliberately quiet: hairline borders instead of shadows, pill buttons, tabular figures, almost no ornament.
 
 Certainty is drawn. Verified value is solid violet, estimated value is a hatched pale violet, unmeasured value is an outlined dashed shape. The three are never summed or blended. The signature move is the monospace `#seq` sequence gutter: ids, scopes and sequence numbers are always Geist Mono, tabular and muted, and they anchor timelines, evidence and the event log, so order is read by sequence number, never by time.
 

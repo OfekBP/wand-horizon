@@ -2,6 +2,8 @@ import { useMemo, type ReactNode } from 'react'
 import { findings } from '../../domain/findings'
 import { authorityAtRisk, queueCounts } from '../../domain/selectors'
 import type { SimRole } from '../../domain/types'
+import { DEMO_VIDEO_URL } from '../../config/site'
+import { HOME_HASH } from '../../state/route'
 import { SCREEN_LABEL, useNav, type Screen } from '../../state/nav'
 import { useApp } from '../../state/store'
 import { Button } from '../primitives/Button'
@@ -46,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="shell">
       <aside className="side">
         <div className="brand">
-          <Logo tone="dark" />
+          <Logo href={HOME_HASH} />
           <p className="brand__line">{PRODUCT_LINE}</p>
         </div>
 
@@ -85,6 +87,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Button>
           )}
           <span className="topbar__spacer" />
+          <a className="topbar__link" href={HOME_HASH}>
+            Introduction
+          </a>
+          {DEMO_VIDEO_URL && (
+            <a className="topbar__link" href={DEMO_VIDEO_URL} target="_blank" rel="noreferrer noopener">
+              Demo video
+            </a>
+          )}
           <div className="who" title="Simulated role. Sets the actor recorded in audit events. Not authentication or authorization.">
             <span>
               <span className="who__prefix">Simulated · </span>

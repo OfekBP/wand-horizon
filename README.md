@@ -1,4 +1,4 @@
-# Accord
+# Wand Horizon
 
 A desktop-first prototype for managing a hybrid workforce of 50 people and 500 AI workers. It answers two questions:
 
@@ -19,6 +19,22 @@ npm run dev      # http://localhost:5173
 npm test         # domain tests + UI flow tests
 npm run build    # typecheck + production build
 ```
+
+## Routes and configuration
+
+The whole site uses the URL hash, so direct loads and refreshes work on any static host with no rewrite rules.
+
+| URL | Page |
+| --- | --- |
+| `/` or `/#/` | Introduction landing page |
+| `/#/system` | The System (opens on Overview); `#/overview`, `#/queue`, `#/workforce`, `#/governance` and their deep links also open the System |
+
+Set these at build time (a `.env` file or the host's build settings); see `src/config/site.ts`:
+
+| Variable | Purpose |
+| --- | --- |
+| `VITE_GITHUB_REPO_URL` | The repository URL for the "View GitHub Repository" buttons. Until set, the buttons open `https://github.com`. |
+| `VITE_DEMO_VIDEO_URL` | Demo video link. There is no video yet; while this is empty no demo link is shown anywhere. |
 
 Use **Reset demo** (bottom of the sidebar) to restore the original data. State is in memory only, so a refresh also resets it.
 

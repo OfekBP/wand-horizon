@@ -43,11 +43,11 @@ Synthetic local data only: 50 humans and 500 AI workers, trailing 30-day window 
 - No backend, real authentication, real model calls, or unnecessary dependencies. React, TypeScript and Vite.
 - The "Acting as" role selector is simulated: it sets the actor in audit events and is not authentication or authorization.
 - This is a browser simulation and must not claim production-grade security.
-- Undecided: the product name. "Accord" is a working name and may change.
+- Decided: the product is named Wand Horizon (formerly the working name Accord) and uses the supplied Wand Horizon logo.
 
 ## Brand Commitments
 
-None binding. Proposed and replaceable: the working name "Accord", the line "Run the hybrid workforce. Prove what it was allowed to do.", and an original mark of an overlapping circle (people) and rounded square (AI workers) with the overlap in the accent color. Wand's own logo, assets and layouts must not be copied; the broader visual direction of wand.ai (editorial type, warm stone and deep night chapters, violet accent) is inspiration only.
+None binding. The product line is "One workforce. Full accountability." and the logo is the supplied Wand Horizon wordmark (public/wand-horizon-logo.png). Wand's own logo, assets and layouts must not be copied; the broader visual direction of wand.ai (editorial type, warm stone and deep night chapters, violet accent) is inspiration only.
 
 ## Evidence on Hand
 
